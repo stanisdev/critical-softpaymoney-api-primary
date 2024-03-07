@@ -1,0 +1,10 @@
+/entry-point/dist
+/entry-point/node_modules
+/entry-point/build
+
+# dotenv environment variable files
+/config/.env
+/config/.env.development.local
+/config/.env.test.local
+/config/.env.production.local
+/config/.env.local
