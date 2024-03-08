@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
-import config from 'src/common/config';
+import { BalanceEntity } from './entities/balance.entity';
+import config from '../common/config';
 
 export const typeOrmDataSource = new DataSource({
     type: 'postgres',
@@ -8,4 +9,9 @@ export const typeOrmDataSource = new DataSource({
     username: config.db.user,
     password: config.db.password,
     database: config.db.name,
+    logging: true,
+    synchronize: false,
+    name: 'default',
+    entities: [BalanceEntity],
+    migrations: [],
 });

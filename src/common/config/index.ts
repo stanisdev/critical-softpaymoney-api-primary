@@ -10,10 +10,7 @@ function getRootDir(): string {
 }
 
 function getEnvFileName(): string | never {
-    const envFilePath = join(
-        rootDir,
-        `.env.${process.env.NODE_ENV}`,
-    );
+    const envFilePath = join(rootDir, `.env.${process.env.NODE_ENV}`);
     if (!doesFileExist(envFilePath)) {
         throw new Error(`The env file "${envFilePath}" does not exist`);
     }
