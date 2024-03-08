@@ -28,10 +28,10 @@
     "@nestjs/platform-fastify": "^10.3.3",
     "dotenv": "^16.4.5",
     "pg": "^8.11.3",
-    "pg-pool": "^3.6.1",
     "pino": "^8.19.0",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "typeorm": "^0.3.20"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

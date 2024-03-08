@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import { join, parse, dirname } from 'node:path';
+import { join, parse } from 'node:path';
 import { existsSync as doesFileExist } from 'fs';
 
 function getRootDir(): string {
@@ -11,11 +11,9 @@ function getRootDir(): string {
 
 function getEnvFileName(): string | never {
     const envFilePath = join(
-        rootDir.primaryRepository,
-        'config',
+        rootDir,
         `.env.${process.env.NODE_ENV}`,
     );
-
     if (!doesFileExist(envFilePath)) {
         throw new Error(`The env file "${envFilePath}" does not exist`);
     }
@@ -24,12 +22,7 @@ function getEnvFileName(): string | never {
 
 const { env } = process;
 const nodeEnv = env.NODE_ENV;
-const entryPointRootDir = getRootDir();
-
-const rootDir = {
-    primaryRepository: dirname(entryPointRootDir),
-    entryPoint: entryPointRootDir,
-};
+const rootDir = getRootDir();
 
 dotenv.config({
     path: getEnvFileName(),
