@@ -5,26 +5,31 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { Min, Length, IsNumber, IsEnum } from 'class-validator';
-import { Сurrency } from 'src/common/types/general';
+import { Length, IsNumber } from 'class-validator';
 
-@Entity('Balances')
-export class BalanceEntity {
+@Entity('PaymentTransactions')
+export class PaymentTransactionEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
     @Column()
-    @IsNumber()
-    @Min(0)
-    value: number;
-
-    @Column()
-    @IsEnum(Сurrency)
-    currencyType: Сurrency;
+    @Length(24)
+    userId: string;
 
     @Column()
     @Length(24)
-    userId: string;
+    productId: string;
+
+    @Column()
+    @Length(24)
+    orderId: string;
+
+    @Column()
+    @IsNumber()
+    amount: number;
+
+    @Column()
+    type: string;
 
     @CreateDateColumn()
     createdAt: Date;
