@@ -6,7 +6,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import { Min, Length, IsNumber, IsEnum } from 'class-validator';
-import { Сurrency } from 'src/common/types/general';
+import { Сurrency } from 'src/common/enums/general';
 
 @Entity('Balances')
 export class BalanceEntity {

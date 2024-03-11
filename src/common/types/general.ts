@@ -1,11 +1,7 @@
-export enum Сurrency {
-    Rub = 'Rub',
-    Usd = 'Usd',
-    Usdt = 'Usdt',
-}
+export type Dictionary = {
+    [key: string]: string;
+};
 
-export enum IncomingRequestStatus {
-    Received = 'Received',
-    Processed = 'Processed',
-    Failed = 'Failed',
-}
+export type SuccessfulResponse = {
+    ok: boolean;
+};

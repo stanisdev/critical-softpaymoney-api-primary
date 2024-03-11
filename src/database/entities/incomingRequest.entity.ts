@@ -1,5 +1,5 @@
 import { IsEnum } from 'class-validator';
-import { IncomingRequestStatus } from 'src/common/types/general';
+import { IncomingRequestStatus, PaymentSystem } from 'src/common/enums/general';
 import {
     Entity,
     PrimaryGeneratedColumn,
@@ -21,7 +21,8 @@ export class IncomingRequestEntity {
     status: IncomingRequestStatus;
 
     @Column()
-    from: string;
+    @IsEnum(PaymentSystem)
+    paymentSystem: PaymentSystem;
 
     @CreateDateColumn()
     createdAt: Date;

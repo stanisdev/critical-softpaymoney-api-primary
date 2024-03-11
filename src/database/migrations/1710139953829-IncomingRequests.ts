@@ -11,7 +11,7 @@ export class IncomingRequests1710139953829 implements MigrationInterface {
                 id INTEGER DEFAULT nextval('IncomingRequests_id_seq') PRIMARY KEY,
                 payload VARCHAR NOT NULL,
                 status IncomingRequestStatus NOT NULL,
-                "from" VARCHAR NOT NULL, -- Payment system name
+                "paymentSystem" VARCHAR NOT NULL, -- Payment system name
                 "createdAt" TIMESTAMP DEFAULT current_timestamp,
                 "updatedAt" TIMESTAMP
             );
