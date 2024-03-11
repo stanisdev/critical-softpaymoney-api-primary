@@ -1,39 +1,35 @@
-import { Injectable } from '@nestjs/common';
+import {
+    BadRequestException,
+    Injectable,
+    InternalServerErrorException,
+} from '@nestjs/common';
+import { PaymentSystem } from 'src/common/enums/general';
+import { GazpromWebhook } from 'src/common/providers/webhook/gazprom.webhook';
+import { IncomingRequestEntity } from 'src/database/entities/incomingRequest.entity';
+import { incomingRequestRepository } from 'src/database/repositories';
 
 @Injectable()
 export class HandlerService {
-    process() {
-        /**
-        await typeOrmDataSource.manager.transaction(
-            'SERIALIZABLE',
-            async (transactionalEntityManager) => {
-                const balanceRecord = {
-                    value: 10,
-                    currencyType: Сurrency.Rub,
-                    userId: '63e794a3fdfb9e440a688e76',
-                };
-                const paymentTransactionRecord = {
-                    userId: '63e2cd04847c01ff9a071b3b',
-                    productId: '63e4039e83eb8b1b89f6be90',
-                    orderId: '63e8f18fd703ca5f8762f2c6',
-                    amount: 1587,
-                    type: 'RECEIVING',
-                };
-                await transactionalEntityManager
-                    .createQueryBuilder()
-                    .insert()
-                    .into(BalanceEntity)
-                    .values(balanceRecord)
-                    .execute();
+    async process(incomingRequestId: number) {
+        const incomingRequest = await incomingRequestRepository
+            .createQueryBuilder()
+            .where('id = :id', { id: incomingRequestId })
+            .limit(1)
+            .getOne();
 
-                await transactionalEntityManager
-                    .createQueryBuilder()
-                    .insert()
-                    .into(PaymentTransactionEntity)
-                    .values(paymentTransactionRecord)
-                    .execute();
-            },
+        if (!(incomingRequest instanceof IncomingRequestEntity)) {
+            // @todo: log with the DB logger
+            throw new BadRequestException(
+                `Incoming request id='${incomingRequestId}' is not found`,
+            );
+        }
+        if (incomingRequest.paymentSystem === PaymentSystem.Gazprom) {
+            await new GazpromWebhook(incomingRequest).execute();
+            return;
+        }
+        // @todo: log with the DB logger
+        throw new InternalServerErrorException(
+            `Unknown payment system '${incomingRequest.paymentSystem}'`,
         );
-         */
     }
 }

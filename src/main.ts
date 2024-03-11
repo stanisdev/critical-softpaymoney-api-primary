@@ -3,7 +3,7 @@ import {
     FastifyAdapter,
     NestFastifyApplication,
 } from '@nestjs/platform-fastify';
-import { LogLevel, LoggerService } from '@nestjs/common';
+import { LogLevel, LoggerService, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './modules/app.module';
 
 import RegularLogger from './common/providers/logger/regular.logger';
@@ -44,6 +44,7 @@ async function bootstrap() {
     await app.register(helmet);
     await app.register(fastifyCsrf);
     app.enableShutdownHooks();
+    app.useGlobalPipes(new ValidationPipe());
 
     const serverPort = config.server.port;
     await app.listen(serverPort);

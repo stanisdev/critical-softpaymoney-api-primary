@@ -12,15 +12,15 @@ import { PrimaryService } from './primary.service';
 import { Dictionary, SuccessfulResponse } from 'src/common/types/general';
 import { PaymentSystem } from 'src/common/enums/general';
 
-@Controller('/')
 @UsePipes(PaymentSystemValidationPipe)
+@Controller('/entry-point/:paymentSystem')
 export class PrimaryController {
     constructor(private readonly primaryService: PrimaryService) {}
 
     /**
      * Entry point for GET method
      */
-    @Get('/entry-point/:paymentSystem')
+    @Get('/')
     async indexGet(
         @Query() query: Dictionary,
         @Param('paymentSystem') paymentSystem: PaymentSystem,
@@ -37,7 +37,7 @@ export class PrimaryController {
     /**
      * Entry point for POST method
      */
-    @Post('/entry-point/:paymentSystem')
+    @Post('/')
     async indexPost(
         @Body() body: Dictionary,
         @Param('paymentSystem') paymentSystem: PaymentSystem,
