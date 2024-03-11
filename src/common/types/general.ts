@@ -3,3 +3,9 @@ export enum Сurrency {
     Usd = 'Usd',
     Usdt = 'Usdt',
 }
+
+export enum IncomingRequestStatus {
+    Received = 'Received',
+    Processed = 'Processed',
+    Failed = 'Failed',
+}

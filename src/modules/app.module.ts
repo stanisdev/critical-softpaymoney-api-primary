@@ -1,10 +1,11 @@
 import { Module, OnModuleDestroy } from '@nestjs/common';
 import { PrimaryModule } from './primary/primary.module';
 import { typeOrmDataSource } from 'src/database/data-source';
+import { HandlerModule } from './handler/handler.module';
 import RegularLogger from 'src/common/providers/logger/regular.logger';
 
 @Module({
-    imports: [PrimaryModule],
+    imports: [PrimaryModule, HandlerModule],
 })
 export class AppModule implements OnModuleDestroy {
     private logger = RegularLogger.getInstance();
