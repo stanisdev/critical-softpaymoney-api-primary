@@ -13,3 +13,7 @@ export enum IncomingRequestStatus {
 export enum PaymentSystem {
     Gazprom = 'Gazprom',
 }
+
+export enum DatabaseLogType {
+    ServerError = 'ServerError',
+}

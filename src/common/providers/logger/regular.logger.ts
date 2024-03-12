@@ -8,7 +8,7 @@ export default class RegularLogger implements LoggerService {
     private constructor() {}
 
     /**
-     * Get an instance of the class
+     * Get instance of the class
      */
     static getInstance(): RegularLogger {
         if (!(RegularLogger.instance instanceof RegularLogger)) {

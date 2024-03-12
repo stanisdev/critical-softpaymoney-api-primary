@@ -6,12 +6,16 @@ import {
     HttpStatus,
 } from '@nestjs/common';
 import { getReasonPhrase as statusCodeToPhrase } from 'http-status-codes';
-import { FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyReply } from 'fastify';
 import { isEmpty } from 'lodash';
 import { Response } from '../interfaces/general';
+import { DatabaseLogger } from '../providers/logger/database.logger';
+import { DatabaseLogType } from '../enums/general';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
+    private databaseLogger = DatabaseLogger.getInstance();
+
     /**
      * Catch an exception
      */
@@ -69,14 +73,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
                 message: statusCodeToPhrase(statusCode),
             };
             /**
-             * This information needs to be stored in DB logs
+             * This catched error needs to be stored in DB logs
              */
             if (exception instanceof Error) {
-                console.log(exception.message);
-                console.log(exception.stack);
+                const payload = {
+                    message: exception.message,
+                    stack: exception.stack,
+                };
+                await this.databaseLogger.write(
+                    DatabaseLogType.ServerError,
+                    payload,
+                );
             }
         }
-
         fastifyResponse.status(statusCode).send(finalResponse);
     }
 }

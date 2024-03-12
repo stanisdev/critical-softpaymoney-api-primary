@@ -3,6 +3,7 @@ import { BalanceEntity } from './entities/balance.entity';
 import config from '../common/config';
 import { PaymentTransactionEntity } from './entities/paymentTransaction.entity';
 import { IncomingRequestEntity } from './entities/incomingRequest.entity';
+import { LogEntity } from './entities/log.entity';
 
 export const typeOrmDataSource = new DataSource({
     type: 'postgres',
@@ -14,6 +15,11 @@ export const typeOrmDataSource = new DataSource({
     logging: true,
     synchronize: false,
     name: 'default',
-    entities: [BalanceEntity, PaymentTransactionEntity, IncomingRequestEntity],
+    entities: [
+        BalanceEntity,
+        PaymentTransactionEntity,
+        IncomingRequestEntity,
+        LogEntity,
+    ],
     migrations: [],
 });
