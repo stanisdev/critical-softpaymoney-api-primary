@@ -11,6 +11,8 @@ import helmet from '@fastify/helmet';
 import fastifyCsrf from '@fastify/csrf-protection';
 import config from './common/config';
 import { typeOrmDataSource } from 'src/database/data-source';
+import { TransformResponseInterceptor } from './common/interceptors/transform-response.interceptor';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 async function bootstrap() {
     const logger = RegularLogger.getInstance();
@@ -43,7 +45,10 @@ async function bootstrap() {
 
     await app.register(helmet);
     await app.register(fastifyCsrf);
+
     app.enableShutdownHooks();
+    app.useGlobalFilters(new GlobalExceptionFilter());
+    app.useGlobalInterceptors(new TransformResponseInterceptor());
     app.useGlobalPipes(new ValidationPipe());
 
     const serverPort = config.server.port;
