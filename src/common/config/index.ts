@@ -40,4 +40,9 @@ export default {
         port: +env.POSTGRES_PORT,
         poolMaxSize: +env.POSTGRES_POOL_MAX_SIZE,
     },
+    environment: {
+        isDev() {
+            return typeof nodeEnv === 'string' && nodeEnv.includes('development');
+        },
+    },
 };
