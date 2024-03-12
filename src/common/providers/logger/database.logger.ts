@@ -2,7 +2,7 @@ import { DatabaseLogType } from 'src/common/enums/general';
 import { Dictionary } from 'src/common/types/general';
 import { logRepository } from 'src/database/repositories';
 
-export class DatabaseLogger {
+export default class DatabaseLogger {
     private static instance: DatabaseLogger | null = null;
     private constructor() {}
 

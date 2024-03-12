@@ -9,12 +9,14 @@ import { getReasonPhrase as statusCodeToPhrase } from 'http-status-codes';
 import { FastifyReply } from 'fastify';
 import { isEmpty } from 'lodash';
 import { Response } from '../interfaces/general';
-import { DatabaseLogger } from '../providers/logger/database.logger';
 import { DatabaseLogType } from '../enums/general';
+import DatabaseLogger from '../providers/logger/database.logger';
+import RegularLogger from '../providers/logger/regular.logger';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
     private databaseLogger = DatabaseLogger.getInstance();
+    private regularLogger = RegularLogger.getInstance();
 
     /**
      * Catch an exception
@@ -80,10 +82,17 @@ export class GlobalExceptionFilter implements ExceptionFilter {
                     message: exception.message,
                     stack: exception.stack,
                 };
-                await this.databaseLogger.write(
-                    DatabaseLogType.ServerError,
-                    payload,
-                );
+                try {
+                    await this.databaseLogger.write(
+                        DatabaseLogType.ServerError,
+                        payload,
+                    );
+                } catch (failedDbWriting) {
+                    this.regularLogger.error(
+                        failedDbWriting,
+                        'Unable to write log info in the database',
+                    );
+                }
             }
         }
         fastifyResponse.status(statusCode).send(finalResponse);

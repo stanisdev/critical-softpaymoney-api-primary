@@ -42,7 +42,9 @@ export default {
     },
     environment: {
         isDev() {
-            return typeof nodeEnv === 'string' && nodeEnv.includes('development');
+            return (
+                typeof nodeEnv === 'string' && nodeEnv.includes('development')
+            );
         },
     },
 };

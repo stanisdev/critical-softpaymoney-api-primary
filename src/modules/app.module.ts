@@ -30,7 +30,9 @@ export class AppModule implements OnModuleDestroy {
         } else if (serveModuleParam === 'handler') {
             modules.push(HandlerModule);
         } else {
-            throw new Error(`Server started with lack of necessary 'env' variables`);
+            throw new Error(
+                `Server started with lack of necessary 'env' variables`,
+            );
         }
         return modules;
     }

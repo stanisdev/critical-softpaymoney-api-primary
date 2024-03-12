@@ -1,5 +1,5 @@
 export type Dictionary = {
-    [key: string]: string | Dictionary;
+    [key: string]: string | number | Dictionary;
 };
 
 export type SuccessfulResponse = {
