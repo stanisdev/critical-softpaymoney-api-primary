@@ -12,7 +12,7 @@ export type AxiosResponse<T> = {
 };
 
 export type HttpRequestResult = {
-    ok: boolean,
+    ok: boolean;
     message?: string;
     data?: Dictionary;
 };

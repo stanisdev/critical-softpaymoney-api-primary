@@ -13,6 +13,7 @@ import config from './common/config';
 import { typeOrmDataSource } from 'src/database/data-source';
 import { TransformResponseInterceptor } from './common/interceptors/transform-response.interceptor';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { GeneralUtil } from './common/utils/general.util';
 
 async function bootstrap() {
     const logger = RegularLogger.getInstance();
@@ -52,17 +53,40 @@ async function bootstrap() {
     app.useGlobalPipes(new ValidationPipe());
 
     /**
-     * Get server port
+     * Define server port and type
      */
-    let serverPort: number;
+    const server = {
+        port: 0,
+        type: '',
+    };
     if (config.server.isPrimary()) {
-        serverPort = config.server.port.primary;
+        server.port = config.server.port.primary;
+        server.type = 'Primary';
+    } else {
+        /**
+         * If server started as 'Handler'
+         */
+        const leastPort = config.server.port.handler;
+        for (let index = 0; index < 10; index++) {
+            const port = leastPort + index;
+            const isPortInUse = await GeneralUtil.isPortInUse(port);
+
+            if (!isPortInUse) {
+                server.port = port;
+                break;
+            }
+        }
+        if (server.port === 0) {
+            logger.log(
+                `Server cannot be started since ports from ${leastPort} to ${leastPort + 10} are already in use`,
+            );
+            process.exit(1);
+        }
+        server.type = 'Handler';
     }
-    else {
-        serverPort = config.server.port.handler;
-    }
-    await app.listen(serverPort);
-    logger.log('Server started at port: ' + serverPort);
+
+    await app.listen(server.port);
+    logger.log(`Server started at port ${server.port} as '${server.type}'`);
 
     /**
      * Handle the event of app being terminated

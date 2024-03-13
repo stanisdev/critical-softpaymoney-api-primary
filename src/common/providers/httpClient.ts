@@ -9,7 +9,7 @@ export class HttpClient {
             url: string;
             method: HttpMethod;
             body: Dictionary;
-        }
+        },
     ) {}
     /**
      * Send http request

@@ -19,7 +19,7 @@ export class AppModule implements OnModuleDestroy {
      * Get list of modules needed to be loaded
      */
     static getModules() {
-        const serveModuleParam = process.env.SERVE_MODULE;
+        const serveModuleParam = process.env.SERVER_TYPE;
         let modules: (typeof PrimaryModule)[] = [];
 
         if (serveModuleParam === 'primary') {
@@ -28,10 +28,9 @@ export class AppModule implements OnModuleDestroy {
             modules.push(HandlerModule);
         } else if (serveModuleParam === 'all') {
             modules.push(PrimaryModule, HandlerModule);
-        }
-        else {
+        } else {
             throw new Error(
-                `Server started with lack of 'SERVE_MODULE' variable`,
+                `Server started with lack of 'SERVER_TYPE' variable`,
             );
         }
         return modules;

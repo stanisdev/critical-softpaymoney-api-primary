@@ -35,10 +35,10 @@ export default {
             handler: +env.HANDLER_SERVER_PORT,
         },
         isPrimary() {
-            return env.SERVE_MODULE === 'primary';
+            return env.SERVER_TYPE === 'primary';
         },
         isHandler() {
-            return env.SERVE_MODULE === 'handler';
+            return env.SERVER_TYPE === 'handler';
         },
     },
     db: {
