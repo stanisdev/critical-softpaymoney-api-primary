@@ -30,7 +30,16 @@ dotenv.config({
  */
 export default {
     server: {
-        port: +env.ENTRY_POINT_SERVER_PORT,
+        port: {
+            primary: +env.PRIMARY_SERVER_PORT,
+            handler: +env.HANDLER_SERVER_PORT,
+        },
+        isPrimary() {
+            return env.SERVE_MODULE === 'primary';
+        },
+        isHandler() {
+            return env.SERVE_MODULE === 'handler';
+        },
     },
     db: {
         user: env.POSTGRES_USER,

@@ -16,6 +16,5 @@ export class GazpromWebhook {
                 `Payload of incoming request with id=${incomingRequest.id} cannot be parsed`,
             );
         }
-        console.log(payload);
     }
 }

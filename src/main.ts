@@ -51,7 +51,16 @@ async function bootstrap() {
     app.useGlobalInterceptors(new TransformResponseInterceptor());
     app.useGlobalPipes(new ValidationPipe());
 
-    const serverPort = config.server.port;
+    /**
+     * Get server port
+     */
+    let serverPort: number;
+    if (config.server.isPrimary()) {
+        serverPort = config.server.port.primary;
+    }
+    else {
+        serverPort = config.server.port.handler;
+    }
     await app.listen(serverPort);
     logger.log('Server started at port: ' + serverPort);
 

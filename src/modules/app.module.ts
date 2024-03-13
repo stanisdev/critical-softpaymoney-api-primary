@@ -3,7 +3,6 @@ import { PrimaryModule } from './primary/primary.module';
 import { typeOrmDataSource } from 'src/database/data-source';
 import { HandlerModule } from './handler/handler.module';
 import RegularLogger from 'src/common/providers/logger/regular.logger';
-import config from 'src/common/config';
 
 @Module({
     imports: [...AppModule.getModules()],
@@ -23,15 +22,16 @@ export class AppModule implements OnModuleDestroy {
         const serveModuleParam = process.env.SERVE_MODULE;
         let modules: (typeof PrimaryModule)[] = [];
 
-        if (config.environment.isDev()) {
-            modules.push(PrimaryModule, HandlerModule);
-        } else if (serveModuleParam === 'entry-point') {
+        if (serveModuleParam === 'primary') {
             modules.push(PrimaryModule);
         } else if (serveModuleParam === 'handler') {
             modules.push(HandlerModule);
-        } else {
+        } else if (serveModuleParam === 'all') {
+            modules.push(PrimaryModule, HandlerModule);
+        }
+        else {
             throw new Error(
-                `Server started with lack of necessary 'env' variables`,
+                `Server started with lack of 'SERVE_MODULE' variable`,
             );
         }
         return modules;

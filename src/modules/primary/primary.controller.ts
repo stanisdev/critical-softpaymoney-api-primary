@@ -2,6 +2,8 @@ import {
     Body,
     Controller,
     Get,
+    HttpCode,
+    HttpStatus,
     Param,
     Post,
     Query,
@@ -13,7 +15,7 @@ import { Dictionary, SuccessfulResponse } from 'src/common/types/general';
 import { PaymentSystem } from 'src/common/enums/general';
 
 @UsePipes(PaymentSystemValidationPipe)
-@Controller('/entry-point/:paymentSystem')
+@Controller('/primary/:paymentSystem')
 export class PrimaryController {
     constructor(private readonly primaryService: PrimaryService) {}
 
@@ -21,6 +23,7 @@ export class PrimaryController {
      * Entry point for GET method
      */
     @Get('/')
+    @HttpCode(HttpStatus.OK)
     async indexGet(
         @Query() query: Dictionary,
         @Param('paymentSystem') paymentSystem: PaymentSystem,
@@ -38,6 +41,7 @@ export class PrimaryController {
      * Entry point for POST method
      */
     @Post('/')
+    @HttpCode(HttpStatus.OK)
     async indexPost(
         @Body() body: Dictionary,
         @Param('paymentSystem') paymentSystem: PaymentSystem,
