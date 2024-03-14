@@ -10,6 +10,7 @@ import { HttpClient } from 'src/common/providers/httpClient';
 import { Dictionary } from 'src/common/types/general';
 import DatabaseLogger from 'src/common/providers/logger/database.logger';
 import config from 'src/common/config';
+import { IncomingRequestEntity } from 'src/database/entities/incomingRequest.entity';
 
 @Injectable()
 export class PrimaryService {
@@ -22,10 +23,19 @@ export class PrimaryService {
         requestPayload: string,
         paymentSystem: PaymentSystem,
     ): Promise<IncomingRequestStatus> {
-        const body = {
-            incomingRequestId: 22,
-        };
-        const hasRequestProcessed = await this.sendRequestToHandler(body);
+        const incomingRequest = new IncomingRequestEntity();
+        incomingRequest.payload = requestPayload;
+        incomingRequest.status = IncomingRequestStatus.Received;
+        incomingRequest.paymentSystem = paymentSystem;
+
+        await incomingRequestRepository.save(incomingRequest);
+
+        /**
+         * Send request to a handler server
+         */
+        const hasRequestProcessed = await this.sendRequestToHandler({
+            incomingRequestId: incomingRequest.id,
+        });
 
         let result: IncomingRequestStatus;
         if (hasRequestProcessed) {
@@ -42,21 +52,10 @@ export class PrimaryService {
             .set({
                 status: result,
             })
-            .where('id = :id', { id: body.incomingRequestId })
+            .where('id = :id', { id: incomingRequest.id })
             .execute();
 
         return result;
-
-        const record = {
-            payload: requestPayload,
-            status: IncomingRequestStatus.Received,
-            paymentSystem,
-        };
-        await incomingRequestRepository
-            .createQueryBuilder()
-            .insert()
-            .values(record)
-            .execute();
     }
 
     /**
