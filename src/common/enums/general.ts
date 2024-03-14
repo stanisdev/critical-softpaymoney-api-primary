@@ -19,4 +19,5 @@ export enum DatabaseLogType {
     IncomingRequestNotFound = 'incoming-request-not-found',
     IncomingRequestProcessedOrFailed = 'incoming-request-already-processed-or-failed',
     UnknownPaymentSystem = 'unknown-payment-system',
+    HandlerHasNotProcessedRequest = 'handler-has-not-processed-request',
 }

@@ -8,11 +8,12 @@ import {
     Post,
     Query,
     UsePipes,
+    InternalServerErrorException,
 } from '@nestjs/common';
 import { PaymentSystemValidationPipe } from 'src/common/pipes/payment-system-validation.pipe';
 import { PrimaryService } from './primary.service';
 import { Dictionary, SuccessfulResponse } from 'src/common/types/general';
-import { PaymentSystem } from 'src/common/enums/general';
+import { IncomingRequestStatus, PaymentSystem } from 'src/common/enums/general';
 
 @UsePipes(PaymentSystemValidationPipe)
 @Controller('/primary/:paymentSystem')
@@ -28,13 +29,17 @@ export class PrimaryController {
         @Query() query: Dictionary,
         @Param('paymentSystem') paymentSystem: PaymentSystem,
     ): Promise<SuccessfulResponse> {
-        await this.primaryService.basicHandler(
+        const processingResult = await this.primaryService.processRequest(
             JSON.stringify(query),
             paymentSystem,
         );
-        return {
-            ok: true,
-        };
+        if (processingResult === IncomingRequestStatus.Processed) {
+            return {
+                ok: true,
+            };
+        } else {
+            throw new InternalServerErrorException('Incoming request failed');
+        }
     }
 
     /**
@@ -46,12 +51,16 @@ export class PrimaryController {
         @Body() body: Dictionary,
         @Param('paymentSystem') paymentSystem: PaymentSystem,
     ): Promise<SuccessfulResponse> {
-        await this.primaryService.basicHandler(
+        const processingResult = await this.primaryService.processRequest(
             JSON.stringify(body),
             paymentSystem,
         );
-        return {
-            ok: true,
-        };
+        if (processingResult === IncomingRequestStatus.Processed) {
+            return {
+                ok: true,
+            };
+        } else {
+            throw new InternalServerErrorException('Incoming request failed');
+        }
     }
 }

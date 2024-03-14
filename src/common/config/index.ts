@@ -56,4 +56,7 @@ export default {
             );
         },
     },
+    timeout: {
+        handler: +env.HANDLER_RESPONSE_TIMEOUT,
+    },
 };

@@ -9,6 +9,7 @@ export class HttpClient {
             url: string;
             method: HttpMethod;
             body: Dictionary;
+            timeout: number;
         },
     ) {}
     /**
@@ -22,6 +23,7 @@ export class HttpClient {
                 method: params.method,
                 url: params.url,
                 data: params.body,
+                timeout: params.timeout,
             });
         } catch (requestFailed) {
             let errorMessage: string;
