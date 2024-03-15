@@ -14,6 +14,7 @@ import { typeOrmDataSource } from 'src/database/data-source';
 import { TransformResponseInterceptor } from './common/interceptors/transform-response.interceptor';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { GeneralUtil } from './common/utils/general.util';
+import { MongoClient } from './common/providers/mongoClient';
 
 async function bootstrap() {
     const logger = RegularLogger.getInstance();
@@ -22,15 +23,23 @@ async function bootstrap() {
             ? logger
             : ['warn', 'error', 'verbose'];
     /**
-     * Establish database connection
+     * Establish databases connections
      */
     try {
         await typeOrmDataSource.initialize();
-    } catch (databaseConnectionError) {
-        logger.error(databaseConnectionError, 'Cannot connect to database');
+    } catch (postgresConnectionError) {
+        logger.error(postgresConnectionError, 'Cannot connect to Postgres');
         process.exit(1);
     }
-    logger.log('Database connected');
+    logger.log('Postgres connected');
+
+    try {
+        await MongoClient.getInstance().connect();
+    } catch (mongoConnectionError) {
+        logger.error(mongoConnectionError, 'Cannot connect to Mongo');
+        process.exit(1);
+    }
+    logger.log('Mongo connected');
 
     /**
      * Build application instance

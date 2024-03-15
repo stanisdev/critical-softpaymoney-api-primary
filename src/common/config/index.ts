@@ -42,12 +42,21 @@ export default {
         },
     },
     db: {
-        user: env.POSTGRES_USER,
-        password: env.POSTGRES_PASSWORD,
-        name: env.POSTGRES_DATABASE,
-        host: env.POSTGRES_HOST,
-        port: +env.POSTGRES_PORT,
-        poolMaxSize: +env.POSTGRES_POOL_MAX_SIZE,
+        postgres: {
+            user: env.POSTGRES_USER,
+            password: env.POSTGRES_PASSWORD,
+            name: env.POSTGRES_DATABASE,
+            host: env.POSTGRES_HOST,
+            port: +env.POSTGRES_PORT,
+            poolMaxSize: +env.POSTGRES_POOL_MAX_SIZE,
+        },
+        mongo: {
+            user: env.MONGO_USER,
+            password: env.MONGO_PASSWORD,
+            name: env.MONGO_DATABASE,
+            host: env.MONGO_HOST,
+            port: +env.MONGO_PORT,
+        },
     },
     environment: {
         isDev() {

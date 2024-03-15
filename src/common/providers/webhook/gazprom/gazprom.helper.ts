@@ -1,11 +1,21 @@
 import { InternalServerErrorException } from '@nestjs/common';
-import { Dictionary } from 'src/common/types/general';
 import { IncomingRequestEntity } from 'src/database/entities/incomingRequest.entity';
+import { Dictionary } from 'src/common/types/general';
 
-export class GazpromWebhook {
+export class GazpromHelper {
     constructor(private readonly incomingRequest: IncomingRequestEntity) {}
 
-    async execute(): Promise<void> {
+    getUserPercents(user: Dictionary): number {
+        if (
+            user.percents instanceof Object &&
+            typeof user.percents.GAZPROM === 'number'
+        ) {
+            return +user.percents.GAZPROM;
+        }
+        return 8;
+    }
+
+    parseIncomingRequest(): Dictionary {
         const { incomingRequest } = this;
         let payload: Dictionary;
 
@@ -16,5 +26,6 @@ export class GazpromWebhook {
                 `Payload of incoming request with id=${incomingRequest.id} cannot be parsed`,
             );
         }
+        return payload;
     }
 }

@@ -7,11 +7,11 @@ import { LogEntity } from './entities/log.entity';
 
 export const typeOrmDataSource = new DataSource({
     type: 'postgres',
-    host: config.db.host,
-    port: config.db.port,
-    username: config.db.user,
-    password: config.db.password,
-    database: config.db.name,
+    host: config.db.postgres.host,
+    port: config.db.postgres.port,
+    username: config.db.postgres.user,
+    password: config.db.postgres.password,
+    database: config.db.postgres.name,
     logging: true,
     synchronize: false,
     name: 'default',

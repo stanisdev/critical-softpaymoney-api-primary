@@ -21,3 +21,9 @@ export enum DatabaseLogType {
     UnknownPaymentSystem = 'unknown-payment-system',
     HandlerHasNotProcessedRequest = 'handler-has-not-processed-request',
 }
+
+export enum PaymentTransactionType {
+    Refunded = 'REFUNDED',
+    Referral = 'REFERRAL',
+    Receiving = 'RECEIVING',
+}

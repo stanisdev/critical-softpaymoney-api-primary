@@ -9,7 +9,7 @@ import {
     IncomingRequestStatus,
     PaymentSystem,
 } from 'src/common/enums/general';
-import { GazpromWebhook } from 'src/common/providers/webhook/gazprom.webhook';
+import { GazpromWebhook } from 'src/common/providers/webhook/gazprom/gazprom.webhook';
 import { IncomingRequestEntity } from 'src/database/entities/incomingRequest.entity';
 import { incomingRequestRepository } from 'src/database/repositories';
 
