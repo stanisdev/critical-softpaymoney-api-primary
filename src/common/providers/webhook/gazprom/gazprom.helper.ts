@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { InternalServerErrorException } from '@nestjs/common';
 import { IncomingRequestEntity } from 'src/database/entities/incomingRequest.entity';
 import { Dictionary } from 'src/common/types/general';
@@ -27,5 +28,22 @@ export class GazpromHelper {
             );
         }
         return payload;
+    }
+
+    isSignatureCorrect(
+        signature: string,
+        url: string,
+        certificateContent: string,
+    ): boolean {
+        const decodedSignature = decodeURIComponent(signature);
+
+        const publicKey = crypto
+            .createPublicKey({ key: certificateContent })
+            .export({ type: 'spki', format: 'pem' });
+
+        return crypto
+            .createVerify('RSA-SHA1')
+            .update(url)
+            .verify(publicKey, decodedSignature, 'base64');
     }
 }

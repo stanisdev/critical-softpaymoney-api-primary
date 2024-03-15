@@ -20,6 +20,10 @@ export enum DatabaseLogType {
     IncomingRequestProcessedOrFailed = 'incoming-request-already-processed-or-failed',
     UnknownPaymentSystem = 'unknown-payment-system',
     HandlerHasNotProcessedRequest = 'handler-has-not-processed-request',
+    GazpromSignatureIsIncorrect = 'gazprom-signature-is-incorrect',
+    OrderInMongoNotFound = 'order-in-mongo-not-found',
+    ProductInMongoNotFound = 'product-in-mongo-not-found',
+    ProductOwnerInMongoNotFound = 'product-owner-in-mongo-not-found',
 }
 
 export enum PaymentTransactionType {

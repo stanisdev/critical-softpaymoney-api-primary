@@ -29,6 +29,9 @@ dotenv.config({
  * Config object
  */
 export default {
+    dirs: {
+        keys: join(rootDir, 'keys'),
+    },
     server: {
         port: {
             primary: +env.PRIMARY_SERVER_PORT,
@@ -67,5 +70,8 @@ export default {
     },
     timeout: {
         handler: +env.HANDLER_RESPONSE_TIMEOUT,
+    },
+    gazprom: {
+        certificateFileName: env.GAZPROM_CERTIFICATE_FILE_NAME,
     },
 };
