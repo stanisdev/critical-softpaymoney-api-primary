@@ -5,7 +5,10 @@ export class Balance1709896337253 implements MigrationInterface {
         await queryRunner.query(`
             CREATE SEQUENCE Balances_id_seq;
 
-            CREATE TYPE Сurrency AS ENUM ('Rub', 'Usd', 'Usdt');
+            CREATE TYPE Сurrency AS ENUM ('MONEY', 'DOLLAR', 'CRYPTO');
+                -- MONEY = Rub
+                -- DOLLAR = Usd
+                -- CRYPTO = Usdt
 
             CREATE TABLE "Balances" (
                 id INTEGER DEFAULT nextval('Balances_id_seq') PRIMARY KEY,

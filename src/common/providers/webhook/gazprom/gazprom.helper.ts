@@ -46,4 +46,8 @@ export class GazpromHelper {
             .update(url)
             .verify(publicKey, decodedSignature, 'base64');
     }
+
+    async confirmOrder() {}
+
+    async rejectOrder() {}
 }

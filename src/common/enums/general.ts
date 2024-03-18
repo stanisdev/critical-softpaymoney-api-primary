@@ -1,7 +1,7 @@
 export enum Сurrency {
-    Rub = 'Rub',
-    Usd = 'Usd',
-    Usdt = 'Usdt',
+    Rub = 'MONEY',
+    Usd = 'DOLLAR',
+    Usdt = 'CRYPTO',
 }
 
 export enum IncomingRequestStatus {
@@ -24,10 +24,19 @@ export enum DatabaseLogType {
     OrderInMongoNotFound = 'order-in-mongo-not-found',
     ProductInMongoNotFound = 'product-in-mongo-not-found',
     ProductOwnerInMongoNotFound = 'product-owner-in-mongo-not-found',
+    ProductOwnerBalanceInMongoNotFound = 'product-owner-balance-in-mongo-not-found',
 }
 
 export enum PaymentTransactionType {
     Refunded = 'REFUNDED',
     Referral = 'REFERRAL',
     Receiving = 'RECEIVING',
+}
+
+export enum OrderStatus {
+    Created = 'CREATED',
+    Process = 'PROCESS',
+    Rejected = 'REJECTED',
+    Refunded = 'REFUNDED',
+    Confirmed = 'CONFIRMED',
 }
