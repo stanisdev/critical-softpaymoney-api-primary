@@ -9,9 +9,10 @@ export class Order1710760182540 implements MigrationInterface {
                 id INTEGER DEFAULT nextval('Orders_id_seq') PRIMARY KEY,
                 "mongoOrderId" CHARACTER(24) NOT NULL,
                 "mongoProductId" CHARACTER(24) NOT NULL,
+                "paymentId" VARCHAR(100),
                 "paymentSystem" VARCHAR(60) NOT NULL, -- Payment system name
-                amount DECIMAL NOT NULL,
-                status  VARCHAR(40) NOT NULL,
+                "paymentAmount" DECIMAL NOT NULL,
+                status VARCHAR(40) NOT NULL,
                 "createdAt" TIMESTAMP DEFAULT current_timestamp,
                 "updatedAt" TIMESTAMP
             );

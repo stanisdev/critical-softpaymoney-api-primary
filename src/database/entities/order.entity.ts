@@ -20,11 +20,14 @@ export class OrderEntity {
     mongoProductId: string;
 
     @Column()
+    paymentId: string;
+
+    @Column()
     @IsEnum(PaymentSystem)
     paymentSystem: PaymentSystem;
 
     @Column()
-    amount: number;
+    paymentAmount: number;
 
     @Column()
     @IsEnum(OrderStatus)

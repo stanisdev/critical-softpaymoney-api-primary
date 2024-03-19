@@ -2,11 +2,21 @@ import crypto from 'node:crypto';
 import { InternalServerErrorException } from '@nestjs/common';
 import { IncomingRequestEntity } from 'src/database/entities/incomingRequest.entity';
 import { Dictionary } from 'src/common/types/general';
+import { typeOrmDataSource } from 'src/database/data-source';
+import {
+    IncomingRequestStatus,
+} from 'src/common/enums/general';
+import { PaymentTransactionEntity } from 'src/database/entities/paymentTransaction.entity';
+import { OrderEntity } from 'src/database/entities/order.entity';
+import { MathUtil } from 'src/common/utils/math.util';
 
 export class GazpromHelper {
     constructor(private readonly incomingRequest: IncomingRequestEntity) {}
 
-    getUserPercents(user: Dictionary): number {
+    /**
+     * Get commission percent
+     */
+    getUserCommissionPercents(user: Dictionary): number {
         if (
             user.percents instanceof Object &&
             typeof user.percents.GAZPROM === 'number'
@@ -14,6 +24,23 @@ export class GazpromHelper {
             return +user.percents.GAZPROM;
         }
         return 8;
+    }
+
+    /**
+     * @notice
+     * This method was taken from the Legacy API
+     * without being changed (as is)
+     */
+    subtractCommissionFromAmount(
+        sum: number,
+        percent: number,
+        isCommission: boolean,
+        additionalCommission?: number,
+    ): number {
+        const amount = isCommission
+            ? sum - (sum * percent) / (1 + percent)
+            : sum - sum * percent;
+        return MathUtil.ceil10(amount - (additionalCommission || 0), -2);
     }
 
     parseIncomingRequest(): Dictionary {
@@ -47,7 +74,39 @@ export class GazpromHelper {
             .verify(publicKey, decodedSignature, 'base64');
     }
 
-    async confirmOrder() {}
-
-    async rejectOrder() {}
+    /**
+     * Create order (original data is taken from Mongo)
+     * and create transaction in Postgres
+     */
+    async completeOrder(params: {
+        orderRecord: Dictionary;
+        paymentTransactionRecord: Dictionary;
+        incomingRequestId: number;
+    }): Promise<void> {
+        await typeOrmDataSource.manager.transaction(
+            'SERIALIZABLE',
+            async (transactionalEntityManager) => {
+                await transactionalEntityManager
+                    .createQueryBuilder()
+                    .insert()
+                    .into(PaymentTransactionEntity)
+                    .values(params.paymentTransactionRecord)
+                    .execute();
+                await transactionalEntityManager
+                    .createQueryBuilder()
+                    .insert()
+                    .into(OrderEntity)
+                    .values(params.orderRecord)
+                    .execute();
+                await transactionalEntityManager
+                    .createQueryBuilder()
+                    .update(IncomingRequestEntity)
+                    .set({
+                        status: IncomingRequestStatus.Processed,
+                    })
+                    .where('id = :id', { id: params.incomingRequestId })
+                    .execute();
+            },
+        );
+    }
 }

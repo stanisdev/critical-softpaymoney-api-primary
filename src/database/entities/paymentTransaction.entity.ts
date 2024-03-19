@@ -29,6 +29,9 @@ export class PaymentTransactionEntity {
     amount: number;
 
     @Column()
+    pan: string;
+
+    @Column()
     type: string;
 
     @CreateDateColumn()

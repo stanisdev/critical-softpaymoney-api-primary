@@ -11,6 +11,7 @@ export class PaymentTransaction1709902518442 implements MigrationInterface {
                 "productId" CHARACTER(24) NOT NULL,
                 "orderId" CHARACTER(24) NOT NULL,
                 amount DECIMAL NOT NULL,
+                pan VARCHAR(29),
                 type VARCHAR(50) NOT NULL,
                 "createdAt" TIMESTAMP DEFAULT current_timestamp,
                 "updatedAt" TIMESTAMP

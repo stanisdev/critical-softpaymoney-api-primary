@@ -5,19 +5,21 @@ import {
 import { IncomingRequestEntity } from 'src/database/entities/incomingRequest.entity';
 import { MongoClient } from '../../mongoClient';
 import { GazpromHelper } from './gazprom.helper';
-import { typeOrmDataSource } from 'src/database/data-source';
-import { PaymentTransactionEntity } from 'src/database/entities/paymentTransaction.entity';
 import {
     DatabaseLogType,
     IncomingRequestStatus,
+    OrderStatus,
+    PaymentSystem,
     PaymentTransactionType,
+    Сurrency,
 } from 'src/common/enums/general';
 import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import RegularLogger from '../../logger/regular.logger';
-import config from 'src/common/config';
 import { incomingRequestRepository } from 'src/database/repositories';
+import { isEmpty } from 'lodash';
+import RegularLogger from '../../logger/regular.logger';
 import DatabaseLogger from '../../logger/database.logger';
+import config from 'src/common/config';
 
 export class GazpromWebhook {
     private static regularLogger = RegularLogger.getInstance();
@@ -136,42 +138,124 @@ export class GazpromWebhook {
                 `Product owner not found (id = "${product.user}")`,
             );
         }
-        const percents = this.helper.getUserPercents(productOwner);
 
-        return;
         /**
-         * Run Postgres transaction
+         * Get order amount (price)
          */
-        await typeOrmDataSource.manager.transaction(
-            'SERIALIZABLE',
-            async (transactionalEntityManager) => {
-                // const balanceRecord = {
-                //     value: 10,
-                //     currencyType: Сurrency.Rub,
-                //     userId: '63e794a3fdfb9e440a688e76',
-                // };
-                const paymentTransactionRecord = {
-                    userId: String(productOwner._id),
-                    productId: String(product._id),
+        const inputAmount = Number.parseFloat(<string>payload.amount);
+        if (Number.isNaN(inputAmount)) {
+            await GazpromWebhook.databaseLogger.write(
+                DatabaseLogType.IncomingRequestAmountIsIncorrect,
+                {
+                    incomingRequestId,
                     orderId: String(order._id),
-                    amount: 1587,
-                    type: PaymentTransactionType.Receiving,
-                };
-                // await transactionalEntityManager
-                //     .createQueryBuilder()
-                //     .insert()
-                //     .into(BalanceEntity)
-                //     .values(balanceRecord)
-                //     .execute();
+                    'product.id': order.product,
+                    'productOwner.id': product.user,
+                    amount: payload.amount,
+                },
+            );
+            throw new InternalServerErrorException(
+                `Amount value ("${payload.amount}") is not a number `,
+            );
+        }
+        const commissionPercents =
+            this.helper.getUserCommissionPercents(productOwner);
 
-                await transactionalEntityManager
-                    .createQueryBuilder()
-                    .insert()
-                    .into(PaymentTransactionEntity)
-                    .values(paymentTransactionRecord)
-                    .execute();
-            },
+        const untouchedAmount = inputAmount / 100;
+        const commissionSubtractedAmount = Math.floor(
+            this.helper.subtractCommissionFromAmount(
+                untouchedAmount,
+                commissionPercents / 100,
+                order.commission,
+            ),
         );
+
+        /**
+         * If order was rejected
+         */
+        if (payload.result_code === '2') {
+            const paymentTransactionRecord = {
+                userId: String(productOwner._id),
+                productId: String(order.product),
+                amount: commissionSubtractedAmount,
+                orderId: String(order._id),
+                type: PaymentTransactionType.Receiving,
+            };
+            if (!isEmpty(payload['p.maskedPan'])) {
+                paymentTransactionRecord['pan'] = payload['p.maskedPan'];
+            }
+            /**
+             * Mongo order record is incorrect
+             */
+            if (
+                !(order.payment instanceof Object) ||
+                Object.keys(order.payment).length < 2
+            ) {
+                await GazpromWebhook.databaseLogger.write(
+                    DatabaseLogType.MongoOrderHasNoPaymentObject,
+                    {
+                        incomingRequestId,
+                        'order.id': String(order._id),
+                        'productOwner.id': product.user,
+                    },
+                );
+                throw new InternalServerErrorException(
+                    `Mongo order has no payment object (orderId: ${order._id})`,
+                );
+            }
+            const orderRecord = {
+                mongoOrderId: String(order._id),
+                mongoProductId: String(order.product),
+                paymentId: order.payment.id,
+                paymentSystem: PaymentSystem.Gazprom,
+                paymentAmount: order.payment.amount,
+                status: OrderStatus.Rejected,
+            };
+            await this.helper.completeOrder({
+                orderRecord,
+                paymentTransactionRecord,
+                incomingRequestId,
+            });
+        }
+
+        /**
+         * ==============
+         * Succesful flow
+         * ==============
+         */
+        // await this.helper.confirmOrder();
+
+        /**
+         * Find product owner balance record
+         */
+        const productOwnerBalance = await this.mongoClient
+            .collection('payments')
+            .findOne({
+                user: product.user,
+                type: Сurrency.Rub,
+            });
+        if (!(productOwnerBalance instanceof Object)) {
+            await GazpromWebhook.databaseLogger.write(
+                DatabaseLogType.ProductOwnerBalanceInMongoNotFound,
+                {
+                    incomingRequestId,
+                    'productOwner.id': product.user,
+                    currencyType: Сurrency.Rub,
+                },
+            );
+            throw new InternalServerErrorException(
+                `Product owner balance not found (id = "${product.user}")`,
+            );
+        }
+
+        // const royalty = {
+        //     TINKOFF: order.royalty,
+        //     GAZPROM: order.royalty,
+        //     PRODAMUS: 0,
+        //     CRYPTO: 0,
+        //   };
+
+        // const currentAmount = amount - royalty[order.payment.type];
     }
 
     static loadCertificates() {
