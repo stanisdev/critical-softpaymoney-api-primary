@@ -3,12 +3,18 @@ import { InternalServerErrorException } from '@nestjs/common';
 import { IncomingRequestEntity } from 'src/database/entities/incomingRequest.entity';
 import { Dictionary } from 'src/common/types/general';
 import { typeOrmDataSource } from 'src/database/data-source';
-import { IncomingRequestStatus } from 'src/common/enums/general';
+import {
+    DatabaseLogType,
+    IncomingRequestStatus,
+} from 'src/common/enums/general';
 import { PaymentTransactionEntity } from 'src/database/entities/paymentTransaction.entity';
 import { OrderEntity } from 'src/database/entities/order.entity';
 import { MathUtil } from 'src/common/utils/math.util';
+import DatabaseLogger from '../../logger/database.logger';
 
 export class GazpromHelper {
+    private static databaseLogger = DatabaseLogger.getInstance();
+
     constructor(private readonly incomingRequest: IncomingRequestEntity) {}
 
     /**
@@ -106,5 +112,27 @@ export class GazpromHelper {
                     .execute();
             },
         );
+    }
+
+    /**
+     * Check correctness of order payment
+     */
+    async checkOrderPaymentCorrectness(order: Dictionary, product: Dictionary) {
+        if (
+            !(order.payment instanceof Object) ||
+            Object.keys(order.payment).length < 2
+        ) {
+            await GazpromHelper.databaseLogger.write(
+                DatabaseLogType.MongoOrderHasNoPaymentObject,
+                {
+                    incomingRequestId: this.incomingRequest.id,
+                    'order.id': String(order._id),
+                    'productOwner.id': product.user,
+                },
+            );
+            throw new InternalServerErrorException(
+                `Mongo order has no payment object (orderId: ${order._id})`,
+            );
+        }
     }
 }

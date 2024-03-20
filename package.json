@@ -23,7 +23,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "migration:up": "npx typeorm migration:run -d src/database/data-source.ts",
     "migration:down": "npx typeorm migration:revert -d src/database/data-source.ts",
-    "migration:create": "sh ./src/common/bash/create-migration.sh"
+    "migration:create": "sh ./src/common/bash/create-migration.sh",
+    "prepare": "husky"
   },
   "dependencies": {
     "@fastify/csrf-protection": "^6.4.1",
@@ -65,6 +66,7 @@
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
+    "husky": "^9.0.11",
     "jest": "^29.5.0",
     "prettier": "^3.0.0",
     "source-map-support": "^0.5.21",

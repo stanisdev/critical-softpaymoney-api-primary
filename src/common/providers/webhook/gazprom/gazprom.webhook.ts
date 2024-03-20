@@ -185,6 +185,8 @@ export class GazpromWebhook {
             ),
         );
 
+        this.helper.checkOrderPaymentCorrectness(order, product);
+
         /**
          * If order was rejected
          */
@@ -199,25 +201,6 @@ export class GazpromWebhook {
             if (!isEmpty(payload['p.maskedPan'])) {
                 paymentTransactionRecord['pan'] = payload['p.maskedPan'];
             }
-            /**
-             * Mongo order record is incorrect
-             */
-            if (
-                !(order.payment instanceof Object) ||
-                Object.keys(order.payment).length < 2
-            ) {
-                await GazpromWebhook.databaseLogger.write(
-                    DatabaseLogType.MongoOrderHasNoPaymentObject,
-                    {
-                        incomingRequestId,
-                        'order.id': String(order._id),
-                        'productOwner.id': product.user,
-                    },
-                );
-                throw new InternalServerErrorException(
-                    `Mongo order has no payment object (orderId: ${order._id})`,
-                );
-            }
             const orderRecord = {
                 mongoOrderId: String(order._id),
                 mongoProductId: String(order.product),
@@ -231,14 +214,49 @@ export class GazpromWebhook {
                 paymentTransactionRecord,
                 incomingRequestId,
             });
+            // @todo: add sending webhook to a merchant API (aka: "webhookInitial")
+            return;
         }
 
         /**
-         * ==============
-         * Succesful flow
-         * ==============
+         * Calculate royalty
          */
-        // await this.helper.confirmOrder();
+        let finalAmount = commissionSubtractedAmount;
+        const royalty = Number.parseFloat(order.royalty);
+
+        if (Number.isInteger(royalty)) {
+            finalAmount -= royalty;
+        }
+
+        /**
+         * All checks completed successfully.
+         * Proceed completing order.
+         */
+        const paymentTransactionRecord = {
+            userId: String(productOwner._id),
+            productId: String(order.product),
+            amount: finalAmount,
+            orderId: String(order._id),
+            type: PaymentTransactionType.Receiving,
+        };
+        if (!isEmpty(payload['p.maskedPan'])) {
+            paymentTransactionRecord['pan'] = payload['p.maskedPan'];
+        }
+        const orderRecord = {
+            mongoOrderId: String(order._id),
+            mongoProductId: String(order.product),
+            paymentId: order.payment.id,
+            paymentSystem: PaymentSystem.Gazprom,
+            paymentAmount: order.payment.amount,
+            status: OrderStatus.Confirmed,
+        };
+        await this.helper.completeOrder({
+            orderRecord,
+            paymentTransactionRecord,
+            incomingRequestId,
+        });
+
+        return;
 
         /**
          * Find product owner balance record
@@ -262,15 +280,6 @@ export class GazpromWebhook {
                 `Product owner balance not found (id = "${product.user}")`,
             );
         }
-
-        // const royalty = {
-        //     TINKOFF: order.royalty,
-        //     GAZPROM: order.royalty,
-        //     PRODAMUS: 0,
-        //     CRYPTO: 0,
-        //   };
-
-        // const currentAmount = amount - royalty[order.payment.type];
     }
 
     /**
