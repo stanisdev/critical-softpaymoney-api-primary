@@ -47,3 +47,8 @@ export enum ContentType {
     Json = 'application/json',
     Xml = 'text/xml',
 }
+
+export enum BalanceUpdateOperation {
+    Increment = 'INCREMENT',
+    Decrement = 'DECREMENT',
+}

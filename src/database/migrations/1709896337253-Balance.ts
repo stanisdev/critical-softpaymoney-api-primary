@@ -14,7 +14,8 @@ export class Balance1709896337253 implements MigrationInterface {
                 id INTEGER DEFAULT nextval('Balances_id_seq') PRIMARY KEY,
                 value DECIMAL NOT NULL,
                 "currencyType" Сurrency NOT NULL,
-                "userId" CHARACTER(24) NOT NULL,
+                "userId" VARCHAR(24) NOT NULL,
+                "verificationHash" VARCHAR(100) NOT NULL,
                 "createdAt" TIMESTAMP DEFAULT current_timestamp,
                 "updatedAt" TIMESTAMP,
                 UNIQUE ("userId", "currencyType")

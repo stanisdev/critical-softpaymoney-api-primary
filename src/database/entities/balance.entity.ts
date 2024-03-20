@@ -26,6 +26,9 @@ export class BalanceEntity {
     @Length(24)
     userId: string;
 
+    @Column()
+    verificationHash: string;
+
     @CreateDateColumn()
     createdAt: Date;
 
