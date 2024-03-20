@@ -5,7 +5,7 @@ export class IncomingRequests1710139953829 implements MigrationInterface {
         await queryRunner.query(`
             CREATE SEQUENCE IncomingRequests_id_seq;
 
-            CREATE TYPE IncomingRequestStatus AS ENUM ('Received', 'Processed', 'Failed');
+            CREATE TYPE IncomingRequestStatus AS ENUM ('RECEIVED', 'PROCESSED', 'FAILED');
 
             CREATE TABLE "IncomingRequests" (
                 id INTEGER DEFAULT nextval('IncomingRequests_id_seq') PRIMARY KEY,

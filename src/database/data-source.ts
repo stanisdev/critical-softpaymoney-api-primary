@@ -5,6 +5,7 @@ import { PaymentTransactionEntity } from './entities/paymentTransaction.entity';
 import { IncomingRequestEntity } from './entities/incomingRequest.entity';
 import { LogEntity } from './entities/log.entity';
 import { OrderEntity } from './entities/order.entity';
+import { BalanceUpdateQueueEntity } from './entities/balanceUpdateQueue.entity';
 
 export const typeOrmDataSource = new DataSource({
     type: 'postgres',
@@ -18,6 +19,7 @@ export const typeOrmDataSource = new DataSource({
     name: 'default',
     entities: [
         BalanceEntity,
+        BalanceUpdateQueueEntity,
         PaymentTransactionEntity,
         IncomingRequestEntity,
         LogEntity,

@@ -209,7 +209,7 @@ export class GazpromWebhook {
                 paymentAmount: order.payment.amount,
                 status: OrderStatus.Rejected,
             };
-            await this.helper.completeOrder({
+            await this.helper.completeRejectedOrder({
                 orderRecord,
                 paymentTransactionRecord,
                 incomingRequestId,
@@ -226,6 +226,29 @@ export class GazpromWebhook {
 
         if (Number.isInteger(royalty)) {
             finalAmount -= royalty;
+        }
+
+        /**
+         * Find product owner balance record
+         */
+        const productOwnerBalance = await this.mongoClient
+            .collection('payments')
+            .findOne({
+                user: product.user,
+                type: Сurrency.Rub,
+            });
+        if (!(productOwnerBalance instanceof Object)) {
+            await GazpromWebhook.databaseLogger.write(
+                DatabaseLogType.ProductOwnerBalanceInMongoNotFound,
+                {
+                    incomingRequestId,
+                    'productOwner.id': product.user,
+                    currencyType: Сurrency.Rub,
+                },
+            );
+            throw new InternalServerErrorException(
+                `Product owner balance not found (id = "${product.user}")`,
+            );
         }
 
         /**
@@ -250,36 +273,13 @@ export class GazpromWebhook {
             paymentAmount: order.payment.amount,
             status: OrderStatus.Confirmed,
         };
-        await this.helper.completeOrder({
+        await this.helper.completePaidOrder({
+            productOwner,
+            productOwnerBalance,
             orderRecord,
             paymentTransactionRecord,
             incomingRequestId,
         });
-
-        return;
-
-        /**
-         * Find product owner balance record
-         */
-        const productOwnerBalance = await this.mongoClient
-            .collection('payments')
-            .findOne({
-                user: product.user,
-                type: Сurrency.Rub,
-            });
-        if (!(productOwnerBalance instanceof Object)) {
-            await GazpromWebhook.databaseLogger.write(
-                DatabaseLogType.ProductOwnerBalanceInMongoNotFound,
-                {
-                    incomingRequestId,
-                    'productOwner.id': product.user,
-                    currencyType: Сurrency.Rub,
-                },
-            );
-            throw new InternalServerErrorException(
-                `Product owner balance not found (id = "${product.user}")`,
-            );
-        }
     }
 
     /**

@@ -1,5 +1,6 @@
 import { typeOrmDataSource } from '../data-source';
 import { BalanceEntity } from '../entities/balance.entity';
+import { BalanceUpdateQueueEntity } from '../entities/balanceUpdateQueue.entity';
 import { IncomingRequestEntity } from '../entities/incomingRequest.entity';
 import { LogEntity } from '../entities/log.entity';
 import { OrderEntity } from '../entities/order.entity';
@@ -11,6 +12,9 @@ export const paymentTransactionRepository = typeOrmDataSource.getRepository(
 );
 export const incomingRequestRepository = typeOrmDataSource.getRepository(
     IncomingRequestEntity,
+);
+export const balanceUpdateQueueRepository = typeOrmDataSource.getRepository(
+    BalanceUpdateQueueEntity,
 );
 export const logRepository = typeOrmDataSource.getRepository(LogEntity);
 export const orderRepository = typeOrmDataSource.getRepository(OrderEntity);

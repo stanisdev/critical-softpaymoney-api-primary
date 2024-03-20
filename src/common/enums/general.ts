@@ -5,13 +5,13 @@ export enum Сurrency {
 }
 
 export enum IncomingRequestStatus {
-    Received = 'Received',
-    Processed = 'Processed',
-    Failed = 'Failed',
+    Received = 'RECEIVED',
+    Processed = 'PROCESSED',
+    Failed = 'FAILED',
 }
 
 export enum PaymentSystem {
-    Gazprom = 'Gazprom',
+    Gazprom = 'GAZPROM',
 }
 
 export enum DatabaseLogType {

@@ -6,11 +6,14 @@ import { typeOrmDataSource } from 'src/database/data-source';
 import {
     DatabaseLogType,
     IncomingRequestStatus,
+    Сurrency,
 } from 'src/common/enums/general';
 import { PaymentTransactionEntity } from 'src/database/entities/paymentTransaction.entity';
 import { OrderEntity } from 'src/database/entities/order.entity';
 import { MathUtil } from 'src/common/utils/math.util';
 import DatabaseLogger from '../../logger/database.logger';
+import { balanceRepository } from 'src/database/repositories';
+import { BalanceEntity } from 'src/database/entities/balance.entity';
 
 export class GazpromHelper {
     private static databaseLogger = DatabaseLogger.getInstance();
@@ -47,6 +50,9 @@ export class GazpromHelper {
         return MathUtil.ceil10(amount - (additionalCommission || 0), -2);
     }
 
+    /**
+     * Parse payload of incoming request to a plain object
+     */
     parseIncomingRequest(): Dictionary {
         const { incomingRequest } = this;
         let payload: Dictionary;
@@ -82,7 +88,7 @@ export class GazpromHelper {
      * Create order (original data is taken from Mongo)
      * and create transaction in Postgres
      */
-    async completeOrder(params: {
+    async completeRejectedOrder(params: {
         orderRecord: Dictionary;
         paymentTransactionRecord: Dictionary;
         incomingRequestId: number;
@@ -110,6 +116,76 @@ export class GazpromHelper {
                     })
                     .where('id = :id', { id: params.incomingRequestId })
                     .execute();
+            },
+        );
+    }
+
+    async completePaidOrder(params: {
+        productOwner: Dictionary;
+        productOwnerBalance: Dictionary;
+        orderRecord: Dictionary;
+        paymentTransactionRecord: Dictionary;
+        incomingRequestId: number;
+    }): Promise<void> {
+        const balanceInstance = await balanceRepository
+            .createQueryBuilder('b')
+            .where('b."userId" = :userId', {
+                userId: String(params.productOwner._id),
+            })
+            .andWhere('b."currencyType" = :currencyType', {
+                currencyType: Сurrency.Rub,
+            })
+            .select(['b.id'])
+            .limit(1)
+            .getOne();
+
+        let balanceRecord: Dictionary | undefined;
+
+        if (!(balanceInstance instanceof BalanceEntity)) {
+            const { productOwnerBalance } = params;
+
+            balanceRecord = {
+                value: Number(productOwnerBalance.balance),
+                userId: String(productOwnerBalance.user),
+                currencyType: productOwnerBalance.type,
+                verificationHash: productOwnerBalance.balance_hash,
+            };
+        }
+
+        await typeOrmDataSource.manager.transaction(
+            'SERIALIZABLE',
+            async (transactionalEntityManager) => {
+                await transactionalEntityManager
+                    .createQueryBuilder()
+                    .insert()
+                    .into(PaymentTransactionEntity)
+                    .values(params.paymentTransactionRecord)
+                    .execute();
+                await transactionalEntityManager
+                    .createQueryBuilder()
+                    .insert()
+                    .into(OrderEntity)
+                    .values(params.orderRecord)
+                    .execute();
+                await transactionalEntityManager
+                    .createQueryBuilder()
+                    .update(IncomingRequestEntity)
+                    .set({
+                        status: IncomingRequestStatus.Processed,
+                    })
+                    .where('id = :id', { id: params.incomingRequestId })
+                    .execute();
+                /**
+                 * Create user balance if not exist
+                 */
+                if (balanceRecord instanceof Object) {
+                    await transactionalEntityManager
+                        .createQueryBuilder()
+                        .insert()
+                        .into(BalanceEntity)
+                        .values(balanceRecord)
+                        .execute();
+                }
             },
         );
     }
