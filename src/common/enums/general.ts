@@ -42,3 +42,8 @@ export enum OrderStatus {
     Refunded = 'REFUNDED',
     Confirmed = 'CONFIRMED',
 }
+
+export enum ContentType {
+    Json = 'application/json',
+    Xml = 'text/xml',
+}

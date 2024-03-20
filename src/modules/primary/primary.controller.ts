@@ -9,11 +9,19 @@ import {
     Query,
     UsePipes,
     InternalServerErrorException,
+    Response,
 } from '@nestjs/common';
+import * as xml from 'xml';
 import { PaymentSystemValidationPipe } from 'src/common/pipes/payment-system-validation.pipe';
 import { PrimaryService } from './primary.service';
 import { Dictionary, SuccessfulResponse } from 'src/common/types/general';
-import { IncomingRequestStatus, PaymentSystem } from 'src/common/enums/general';
+import {
+    ContentType,
+    IncomingRequestStatus,
+    PaymentSystem,
+} from 'src/common/enums/general';
+import { FastifyReply } from 'fastify';
+import { GeneralUtil } from 'src/common/utils/general.util';
 
 @UsePipes(PaymentSystemValidationPipe)
 @Controller('/primary/:paymentSystem')
@@ -28,15 +36,26 @@ export class PrimaryController {
     async indexGet(
         @Query() query: Dictionary,
         @Param('paymentSystem') paymentSystem: PaymentSystem,
-    ): Promise<SuccessfulResponse> {
+        @Response() reply: FastifyReply,
+    ): Promise<void> {
         const processingResult = await this.primaryService.processRequest(
             JSON.stringify(query),
             paymentSystem,
         );
+
         if (processingResult === IncomingRequestStatus.Processed) {
-            return {
-                ok: true,
-            };
+            const responseParams =
+                GeneralUtil.getPaymentSystemResponse(paymentSystem);
+
+            reply.header('Content-Type', responseParams.contentType);
+            let responsePayload;
+
+            if (responseParams.contentType === ContentType.Xml) {
+                responsePayload = xml(responseParams.payload, true);
+            } else {
+                responsePayload = responseParams.payload;
+            }
+            reply.send(responsePayload);
         } else {
             throw new InternalServerErrorException('Incoming request failed');
         }
@@ -44,6 +63,8 @@ export class PrimaryController {
 
     /**
      * Entry point for POST method
+     *
+     * @todo: edit this method
      */
     @Post('/')
     @HttpCode(HttpStatus.OK)

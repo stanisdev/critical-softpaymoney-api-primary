@@ -20,7 +20,7 @@ export class AppModule implements OnModuleDestroy {
      */
     static getModules() {
         const serveModuleParam = process.env.SERVER_TYPE;
-        let modules: (typeof PrimaryModule)[] = [];
+        const modules: (typeof PrimaryModule)[] = [];
 
         if (serveModuleParam === 'primary') {
             modules.push(PrimaryModule);

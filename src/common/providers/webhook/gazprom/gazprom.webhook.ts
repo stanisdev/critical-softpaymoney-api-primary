@@ -6,6 +6,7 @@ import { IncomingRequestEntity } from 'src/database/entities/incomingRequest.ent
 import { MongoClient } from '../../mongoClient';
 import { GazpromHelper } from './gazprom.helper';
 import {
+    ContentType,
     DatabaseLogType,
     IncomingRequestStatus,
     OrderStatus,
@@ -21,6 +22,9 @@ import RegularLogger from '../../logger/regular.logger';
 import DatabaseLogger from '../../logger/database.logger';
 import config from 'src/common/config';
 
+/**
+ * Class to handle Gazprom bank webhooks
+ */
 export class GazpromWebhook {
     private static regularLogger = RegularLogger.getInstance();
     private static databaseLogger = DatabaseLogger.getInstance();
@@ -29,6 +33,17 @@ export class GazpromWebhook {
     };
     private mongoClient = MongoClient.getInstance().database;
     private helper: GazpromHelper;
+
+    static successfulResponse = {
+        payload: [
+            {
+                'register-payment-response': [
+                    { result: [{ code: 1 }, { desc: 'accept payment' }] },
+                ],
+            },
+        ],
+        contentType: ContentType.Xml,
+    };
 
     constructor(private readonly incomingRequest: IncomingRequestEntity) {
         this.helper = new GazpromHelper(incomingRequest);
@@ -258,6 +273,9 @@ export class GazpromWebhook {
         // const currentAmount = amount - royalty[order.payment.type];
     }
 
+    /**
+     * Load certificates from files
+     */
     static loadCertificates() {
         const certificateFilePath = join(
             config.dirs.keys,

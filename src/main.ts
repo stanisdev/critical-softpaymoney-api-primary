@@ -11,7 +11,6 @@ import helmet from '@fastify/helmet';
 import fastifyCsrf from '@fastify/csrf-protection';
 import config from './common/config';
 import { typeOrmDataSource } from 'src/database/data-source';
-import { TransformResponseInterceptor } from './common/interceptors/transform-response.interceptor';
 import { GazpromWebhook } from './common/providers/webhook/gazprom/gazprom.webhook';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { GeneralUtil } from './common/utils/general.util';
@@ -61,7 +60,6 @@ async function bootstrap() {
 
     app.enableShutdownHooks();
     app.useGlobalFilters(new GlobalExceptionFilter());
-    app.useGlobalInterceptors(new TransformResponseInterceptor());
     app.useGlobalPipes(new ValidationPipe());
 
     /**

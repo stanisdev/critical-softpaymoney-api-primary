@@ -6,10 +6,10 @@ import {
     IncomingRequestStatus,
     PaymentSystem,
 } from 'src/common/enums/general';
-import { HttpClient } from 'src/common/providers/httpClient';
-import { Dictionary } from 'src/common/types/general';
 import DatabaseLogger from 'src/common/providers/logger/database.logger';
 import config from 'src/common/config';
+import { HttpClient } from 'src/common/providers/httpClient';
+import { Dictionary } from 'src/common/types/general';
 import { IncomingRequestEntity } from 'src/database/entities/incomingRequest.entity';
 
 @Injectable()
