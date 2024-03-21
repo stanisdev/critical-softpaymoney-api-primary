@@ -114,24 +114,9 @@ export class GazpromWebhook {
         /**
          * Find user owning the product
          */
-        const productOwner = await this.mongoClient
-            .collection('users')
-            .findOne({
-                _id: product.user,
-            });
-        if (!(productOwner instanceof Object)) {
-            await GazpromWebhook.databaseLogger.write(
-                DatabaseLogType.ProductOwnerInMongoNotFound,
-                {
-                    incomingRequestId,
-                    'product.id': order.product,
-                    'productOwner.id': product.user,
-                },
-            );
-            throw new InternalServerErrorException(
-                `Product owner not found (id = "${product.user}")`,
-            );
-        }
+        const productOwner = await this.dataSource.findProductOwnerById(
+            product.user,
+        );
 
         /**
          * Get order amount (price)

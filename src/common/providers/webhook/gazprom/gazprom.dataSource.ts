@@ -55,4 +55,28 @@ export class GazpromDataSource {
         }
         return product;
     }
+
+    /**
+     * Find user owning the product
+     */
+    async findProductOwnerById(id: ObjectId): Promise<MongoDocument> {
+        const productOwner = await this.mongoClient
+            .collection('users')
+            .findOne({
+                _id: id,
+            });
+        if (!(productOwner instanceof Object)) {
+            await GazpromDataSource.databaseLogger.write(
+                DatabaseLogType.ProductOwnerInMongoNotFound,
+                {
+                    incomingRequestId: this.incomingRequest.id,
+                    'productOwner.id': String(id),
+                },
+            );
+            throw new InternalServerErrorException(
+                `Product owner not found (id = "${id}")`,
+            );
+        }
+        return productOwner;
+    }
 }

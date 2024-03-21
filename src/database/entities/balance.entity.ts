@@ -14,6 +14,10 @@ export class BalanceEntity {
     id: number;
 
     @Column()
+    @Length(24)
+    mongoId: string;
+
+    @Column()
     @IsNumber()
     @Min(0)
     value: number;
@@ -27,7 +31,14 @@ export class BalanceEntity {
     userId: string;
 
     @Column()
+    @Length(24)
+    cardId: string;
+
+    @Column()
     verificationHash: string;
+
+    @Column()
+    withdrawalAt: Date;
 
     @CreateDateColumn()
     createdAt: Date;

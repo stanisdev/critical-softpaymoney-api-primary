@@ -12,6 +12,7 @@ import { Response } from '../interfaces/general';
 import { DatabaseLogType } from '../enums/general';
 import DatabaseLogger from '../providers/logger/database.logger';
 import RegularLogger from '../providers/logger/regular.logger';
+import config from 'src/common/config';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -74,6 +75,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
                 statusCode,
                 message: statusCodeToPhrase(statusCode),
             };
+            if (config.environment.isDev()) {
+                console.error(exception);
+            }
             /**
              * This catched error needs to be stored in DB logs
              */

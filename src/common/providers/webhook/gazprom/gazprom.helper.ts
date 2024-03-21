@@ -147,11 +147,19 @@ export class GazpromHelper {
             const { productOwnerBalance } = params;
 
             balanceRecord = {
+                mongoId: String(productOwnerBalance._id),
                 value: Number(productOwnerBalance.balance),
                 userId: String(productOwnerBalance.user),
                 currencyType: productOwnerBalance.type,
                 verificationHash: productOwnerBalance.balance_hash,
             };
+            if ('card' in productOwnerBalance) {
+                balanceRecord['cardId'] = String(productOwnerBalance.card);
+            }
+            if ('withdrawalAt' in productOwnerBalance) {
+                balanceRecord['withdrawalAt'] =
+                    productOwnerBalance.withdrawalAt;
+            }
         }
 
         await typeOrmDataSource.manager.transaction(
