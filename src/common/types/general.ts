@@ -1,5 +1,7 @@
+import { Document, WithId } from 'mongodb';
+
 export type Dictionary = {
-    [key: string]: string | number | Dictionary;
+    [key: string]: string | number | Date | Dictionary;
 };
 
 export type SuccessfulResponse = {
@@ -16,3 +18,5 @@ export type HttpRequestResult = {
     message?: string;
     data?: Dictionary;
 };
+
+export type MongoDocument = WithId<Document>;

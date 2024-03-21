@@ -13,6 +13,7 @@ export class Order1710760182540 implements MigrationInterface {
                 "paymentSystem" VARCHAR(60) NOT NULL, -- Payment system name
                 "paymentAmount" DECIMAL NOT NULL,
                 status VARCHAR(40) NOT NULL,
+                "paidAt" TIMESTAMP,
                 "createdAt" TIMESTAMP DEFAULT current_timestamp,
                 "updatedAt" TIMESTAMP
             );

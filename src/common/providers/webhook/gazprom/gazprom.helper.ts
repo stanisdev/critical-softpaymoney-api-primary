@@ -1,9 +1,10 @@
 import crypto from 'node:crypto';
 import { InternalServerErrorException } from '@nestjs/common';
 import { IncomingRequestEntity } from 'src/database/entities/incomingRequest.entity';
-import { Dictionary } from 'src/common/types/general';
+import { Dictionary, MongoDocument } from 'src/common/types/general';
 import { typeOrmDataSource } from 'src/database/data-source';
 import {
+    BalanceUpdateOperation,
     DatabaseLogType,
     IncomingRequestStatus,
     Сurrency,
@@ -14,6 +15,7 @@ import { MathUtil } from 'src/common/utils/math.util';
 import DatabaseLogger from '../../logger/database.logger';
 import { balanceRepository } from 'src/database/repositories';
 import { BalanceEntity } from 'src/database/entities/balance.entity';
+import { BalanceUpdateQueueEntity } from 'src/database/entities/balanceUpdateQueue.entity';
 
 export class GazpromHelper {
     private static databaseLogger = DatabaseLogger.getInstance();
@@ -23,7 +25,7 @@ export class GazpromHelper {
     /**
      * Get commission percent
      */
-    getUserCommissionPercents(user: Dictionary): number {
+    getUserCommissionPercents(user: MongoDocument): number {
         if (
             user.percents instanceof Object &&
             typeof user.percents.GAZPROM === 'number'
@@ -175,17 +177,35 @@ export class GazpromHelper {
                     })
                     .where('id = :id', { id: params.incomingRequestId })
                     .execute();
+
+                let balanceId: number;
+
                 /**
                  * Create user balance if not exist
                  */
                 if (balanceRecord instanceof Object) {
-                    await transactionalEntityManager
+                    const insertResult = await transactionalEntityManager
                         .createQueryBuilder()
                         .insert()
                         .into(BalanceEntity)
                         .values(balanceRecord)
                         .execute();
+
+                    balanceId = Number(insertResult.raw[0].id);
+                } else {
+                    balanceId = balanceInstance.id;
                 }
+                const balanceUpdateQueueRecord = {
+                    balanceId,
+                    amount: Number(params.paymentTransactionRecord.amount),
+                    operation: BalanceUpdateOperation.Increment,
+                };
+                await transactionalEntityManager
+                    .createQueryBuilder()
+                    .insert()
+                    .into(BalanceUpdateQueueEntity)
+                    .values(balanceUpdateQueueRecord)
+                    .execute();
             },
         );
     }
@@ -193,7 +213,10 @@ export class GazpromHelper {
     /**
      * Check correctness of order payment
      */
-    async checkOrderPaymentCorrectness(order: Dictionary, product: Dictionary) {
+    async checkOrderPaymentCorrectness(
+        order: MongoDocument,
+        product: MongoDocument,
+    ) {
         if (
             !(order.payment instanceof Object) ||
             Object.keys(order.payment).length < 2

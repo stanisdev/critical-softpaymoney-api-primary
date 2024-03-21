@@ -33,6 +33,9 @@ export class OrderEntity {
     @IsEnum(OrderStatus)
     status: OrderStatus;
 
+    @Column()
+    paidAt: Date;
+
     @CreateDateColumn()
     createdAt: Date;
 

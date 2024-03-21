@@ -21,6 +21,7 @@ import { isEmpty } from 'lodash';
 import RegularLogger from '../../logger/regular.logger';
 import DatabaseLogger from '../../logger/database.logger';
 import config from 'src/common/config';
+import { GazpromDataSource } from './gazprom.dataSource';
 
 /**
  * Class to handle Gazprom bank webhooks
@@ -33,6 +34,7 @@ export class GazpromWebhook {
     };
     private mongoClient = MongoClient.getInstance().database;
     private helper: GazpromHelper;
+    private dataSource: GazpromDataSource;
 
     static successfulResponse = {
         payload: [
@@ -47,6 +49,7 @@ export class GazpromWebhook {
 
     constructor(private readonly incomingRequest: IncomingRequestEntity) {
         this.helper = new GazpromHelper(incomingRequest);
+        this.dataSource = new GazpromDataSource(incomingRequest);
     }
 
     /**
@@ -99,39 +102,15 @@ export class GazpromWebhook {
         /**
          * Find order in MongoDB
          */
-        const order = await this.mongoClient.collection('orders').findOne({
-            'payment.id': orderPaymentId,
-        });
-        if (!(order instanceof Object)) {
-            await GazpromWebhook.databaseLogger.write(
-                DatabaseLogType.OrderInMongoNotFound,
-                {
-                    incomingRequestId,
-                    'order.payment.id': orderPaymentId,
-                },
-            );
-            throw new InternalServerErrorException(
-                `Order not found (payment.id = "${orderPaymentId}")`,
-            );
-        }
+        const order = await this.dataSource.findOrderByPaymentId(
+            <string>orderPaymentId,
+        );
+
         /**
          * Find product in MongoDB
          */
-        const product = await this.mongoClient.collection('products').findOne({
-            _id: order.product,
-        });
-        if (!(product instanceof Object)) {
-            await GazpromWebhook.databaseLogger.write(
-                DatabaseLogType.ProductInMongoNotFound,
-                {
-                    incomingRequestId,
-                    'product.id': order.product,
-                },
-            );
-            throw new InternalServerErrorException(
-                `Product not found (id = "${order.product}")`,
-            );
-        }
+        const product = await this.dataSource.findProductById(order.product);
+
         /**
          * Find user owning the product
          */
@@ -272,6 +251,8 @@ export class GazpromWebhook {
             paymentSystem: PaymentSystem.Gazprom,
             paymentAmount: order.payment.amount,
             status: OrderStatus.Confirmed,
+            paidAt: new Date(),
+            updatedAt: new Date(),
         };
         await this.helper.completePaidOrder({
             productOwner,
