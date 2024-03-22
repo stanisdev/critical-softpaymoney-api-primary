@@ -20,3 +20,10 @@ export type HttpRequestResult = {
 };
 
 export type MongoDocument = WithId<Document>;
+
+export type MerchantApiParameters = {
+    order: MongoDocument;
+    productOwner: MongoDocument;
+    finalAmount: number;
+    untouchedAmount: number;
+};

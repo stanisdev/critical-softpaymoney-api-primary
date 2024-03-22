@@ -18,10 +18,11 @@ import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { incomingRequestRepository } from 'src/database/repositories';
 import { isEmpty } from 'lodash';
+import { GazpromDataSource } from './gazprom.data-source';
 import RegularLogger from '../../logger/regular.logger';
 import DatabaseLogger from '../../logger/database.logger';
 import config from 'src/common/config';
-import { GazpromDataSource } from './gazprom.dataSource';
+import { GazpromExecutionResult } from './gazprom.execution-result';
 
 /**
  * Class to handle Gazprom bank webhooks
@@ -46,6 +47,7 @@ export class GazpromWebhook {
         ],
         contentType: ContentType.Xml,
     };
+    private executionResult: GazpromExecutionResult;
 
     constructor(private readonly incomingRequest: IncomingRequestEntity) {
         this.helper = new GazpromHelper(incomingRequest);
@@ -61,7 +63,7 @@ export class GazpromWebhook {
 
         /**
          * Signature verification.
-         * @notice: Need to be completed
+         * @notice Need to be completed
          */
         const url = '?';
         const signature = '?';
@@ -246,6 +248,21 @@ export class GazpromWebhook {
             paymentTransactionRecord,
             incomingRequestId,
         });
+
+        /**
+         * Create execution result
+         */
+        this.executionResult = new GazpromExecutionResult({
+            orderPaid: true,
+            orderInstance: order,
+            productOwnerInstance: productOwner,
+            finalAmount,
+            untouchedAmount,
+        });
+    }
+
+    getExecutionResult(): GazpromExecutionResult {
+        return this.executionResult;
     }
 
     /**
