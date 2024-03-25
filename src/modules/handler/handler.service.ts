@@ -12,11 +12,13 @@ import {
 import { GazpromWebhook } from 'src/common/providers/webhook/gazprom/gazprom.webhook';
 import { IncomingRequestEntity } from 'src/database/entities/incomingRequest.entity';
 import { incomingRequestRepository } from 'src/database/repositories';
-import { MerchantApi } from 'src/common/providers/merchantApi';
+import { HandlerHelper } from './handler.helper';
 
 @Injectable()
 export class HandlerService {
     private databaseLogger = DatabaseLogger.getInstance();
+
+    constructor(private readonly helper: HandlerHelper) {}
 
     async process(incomingRequestId: number) {
         const incomingRequest = await incomingRequestRepository
@@ -76,17 +78,37 @@ export class HandlerService {
             await gazpromWebhook.execute();
             const executionResult = gazpromWebhook.getExecutionResult();
 
-            if (executionResult instanceof Object) {
+            if (
+                executionResult instanceof Object &&
+                executionResult.value.orderPaid === true
+            ) {
                 /**
-                 * Send order info to merchant webhook URL
+                 * Send order info to external interaction server
                  */
-                const merchantApi = new MerchantApi({
-                    order: executionResult.value.orderInstance,
-                    productOwner: executionResult.value.productOwnerInstance,
+                const payload = {
+                    orderId: executionResult.value.orderInstance._id,
+                    productOwnerId:
+                        executionResult.value.productOwnerInstance._id,
                     finalAmount: executionResult.value.finalAmount,
                     untouchedAmount: executionResult.value.untouchedAmount,
-                });
-                await merchantApi.sendOrderInfoToWebhook();
+                };
+                const externalInteractionData = {
+                    paymentSystem: PaymentSystem.Gazprom,
+                    payload: JSON.stringify(payload),
+                };
+
+                try {
+                    /**
+                     * @note It's not necessary to await the response
+                     */
+                    this.helper.sendDataToExternalInteractionServer(
+                        externalInteractionData,
+                    );
+                } catch (error) {
+                    /**
+                     * @todo: log the case if an error was thrown
+                     */
+                }
             }
             return;
         }

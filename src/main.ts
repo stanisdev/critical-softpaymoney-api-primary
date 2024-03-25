@@ -69,9 +69,18 @@ async function bootstrap() {
         port: 0,
         type: '',
     };
+    /**
+     * Server started as 'Primary'
+     */
     if (config.server.isPrimary()) {
         server.port = config.server.port.primary;
         server.type = 'Primary';
+    } else if (config.server.isExternalInteraction()) {
+        /**
+         * Server started as 'External interaction'
+         */
+        server.port = config.server.port.externalInteraction;
+        server.type = 'External interaction';
     } else {
         /**
          * If server started as 'Handler'

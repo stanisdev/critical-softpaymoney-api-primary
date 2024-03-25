@@ -38,7 +38,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         ) {
             const status = exception.getStatus();
 
-            let errorMessage: string;
+            let errorMessage: string | string[];
 
             if (
                 exception instanceof Object &&
@@ -49,7 +49,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
                 if (
                     errorInstance instanceof Object &&
                     'message' in errorInstance &&
-                    typeof errorInstance.message === 'string'
+                    (typeof errorInstance.message === 'string' ||
+                        Array.isArray(errorInstance.message))
                 ) {
                     errorMessage = errorInstance.message;
                 }

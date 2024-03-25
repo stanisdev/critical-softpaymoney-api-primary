@@ -36,12 +36,16 @@ export default {
         port: {
             primary: +env.PRIMARY_SERVER_PORT,
             handler: +env.HANDLER_SERVER_PORT,
+            externalInteraction: +env.EXTERNAL_INTERACTION_SERVER_PORT,
         },
         isPrimary() {
             return env.SERVER_TYPE === 'primary';
         },
         isHandler() {
             return env.SERVER_TYPE === 'handler';
+        },
+        isExternalInteraction() {
+            return env.SERVER_TYPE === 'externalInteraction';
         },
     },
     db: {
@@ -69,7 +73,8 @@ export default {
         },
     },
     timeout: {
-        handler: +env.HANDLER_RESPONSE_TIMEOUT,
+        handler: +env.HANDLER_SERVER_RESPONSE_TIMEOUT,
+        externalInteraction: +env.EXTERNAL_INTERACTION_SERVER_RESPONSE_TIMEOUT,
     },
     gazprom: {
         certificateFileName: env.GAZPROM_CERTIFICATE_FILE_NAME,
