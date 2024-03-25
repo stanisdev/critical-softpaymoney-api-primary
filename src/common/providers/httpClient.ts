@@ -44,16 +44,21 @@ export class HttpClient {
             if (isEmpty(errorMessage)) {
                 errorMessage = 'Cannot spot the cause of failed http request';
             }
+
+            const statusCode = requestFailed.response?.status;
+
             return {
                 ok: false,
                 message: errorMessage,
+                statusCode,
             };
         }
         const requestResult = {
             ok: true,
             data: {},
+            statusCode: response?.status,
         };
-        if (response instanceof Object && response.data instanceof Object) {
+        if (response?.data instanceof Object) {
             requestResult.data = response.data;
         }
         return requestResult;

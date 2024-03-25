@@ -27,6 +27,7 @@ export enum DatabaseLogType {
     ProductOwnerBalanceInMongoNotFound = 'product-owner-balance-in-mongo-not-found',
     IncomingRequestAmountIsIncorrect = 'incoming-request-amount-is-incorrect',
     MongoOrderHasNoPaymentObject = 'mongo-order-has-no-payment-object',
+    CannotParseExternalInteractionPayload = 'cannot-parse-external-interaction-payload',
 }
 
 export enum PaymentTransactionType {

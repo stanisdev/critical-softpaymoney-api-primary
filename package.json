@@ -44,6 +44,7 @@
     "http-status-codes": "^2.3.0",
     "lodash": "^4.17.21",
     "mongodb": "^5.9.2",
+    "node-schedule": "^2.1.1",
     "pg": "^8.11.3",
     "pino": "^8.19.0",
     "reflect-metadata": "^0.2.0",
