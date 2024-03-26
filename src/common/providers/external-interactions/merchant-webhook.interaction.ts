@@ -4,12 +4,13 @@ import {
     ExternalInteractionPayload,
     MongoDocument,
 } from 'src/common/types/general';
+import DatabaseLogger from 'src/common/providers/logger/database.logger';
+import HTTPMethod from 'http-method-enum';
+import config from 'src/common/config';
 import { DatabaseLogType } from 'src/common/enums/general';
 import { HttpStatus, InternalServerErrorException } from '@nestjs/common';
 import { MongoClient } from 'src/common/providers/mongoClient';
-import DatabaseLogger from 'src/common/providers/logger/database.logger';
 import { GeneralUtil } from 'src/common/utils/general.util';
-import HTTPMethod from 'http-method-enum';
 import { HttpClient } from '../httpClient';
 
 export class MerchantWebhookInteraction {
@@ -46,7 +47,7 @@ export class MerchantWebhookInteraction {
             url: this.merchantWebhook.link,
             body: this.webhookRequestPayload,
             method: HTTPMethod.POST,
-            timeout: 8_000, // @todo: move to the config
+            timeout: config.timeout.merchantWebhook,
         });
         const requestResult = await httpClient.sendRequest();
         const { webhookRequestPayload, merchantWebhook } = this;
@@ -65,10 +66,16 @@ export class MerchantWebhookInteraction {
             statusCode: requestResult.statusCode,
             amount: webhookRequestPayload.amount,
             paidAmount: webhookRequestPayload.paidAmount,
+            createdAt: new Date(),
         };
-        await this.mongoClient
+        const insertResult = await this.mongoClient
             .collection('webhook_journals')
             .insertOne(webhookJournalRecord);
+
+        const webhookJournalMetadata = {
+            id: String(insertResult.insertedId),
+            order: String(this.order._id),
+        };
 
         /**
          * If request failed
@@ -77,7 +84,47 @@ export class MerchantWebhookInteraction {
             requestResult.ok !== true ||
             requestResult.statusCode !== HttpStatus.OK
         ) {
+            await this.scheduleWebhookExecution(webhookJournalMetadata);
         }
+    }
+
+    /**
+     * Schedule not handled merchant webhook
+     */
+    private async scheduleWebhookExecution({
+        order,
+    }: Dictionary): Promise<void> {
+        const [lastWebhookJournalInstance] = await this.mongoClient
+            .collection('webhook_journals')
+            .find({
+                order: new ObjectId(<string>order),
+            })
+            .sort({ createdAt: -1 })
+            .limit(1)
+            .toArray();
+
+        /**
+         * 24 hours agowebhookJournalRecord
+         */
+        const limitDate = new Date(
+            new Date().setDate(new Date().getDate() - 1),
+        );
+        if (
+            !(lastWebhookJournalInstance instanceof Object) ||
+            new Date(lastWebhookJournalInstance.createdAt).getTime() <
+                limitDate.getTime()
+        ) {
+            // @todo: remove all 'webhook journal' records from Mongo
+            return;
+        }
+        /**
+         * 1 hour (in milliseconds)
+         */
+        const oneHour = 1000 * 60 * 60;
+
+        setTimeout(() => {
+            new MerchantWebhookInteraction(this.compressedPayload).execute();
+        }, oneHour);
     }
 
     /**
@@ -132,7 +179,7 @@ export class MerchantWebhookInteraction {
     }
 
     /**
-     * ???
+     * Parse raw, 'stringified' payload
      */
     private parseCompressedPayload(): void | never {
         try {
@@ -152,6 +199,8 @@ export class MerchantWebhookInteraction {
 
     /**
      * Get necessary records from MongoDB
+     *
+     * find: order, product, merchantWebhook
      */
     private async fillDataSource(): Promise<void> {
         const orderId = <string>this.payload.orderId;

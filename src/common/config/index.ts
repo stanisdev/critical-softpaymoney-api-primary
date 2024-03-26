@@ -75,6 +75,7 @@ export default {
     timeout: {
         handler: +env.HANDLER_SERVER_RESPONSE_TIMEOUT,
         externalInteraction: +env.EXTERNAL_INTERACTION_SERVER_RESPONSE_TIMEOUT,
+        merchantWebhook: +env.MERCHANT_WEBHOOK_TIMEOUT,
     },
     gazprom: {
         certificateFileName: env.GAZPROM_CERTIFICATE_FILE_NAME,
