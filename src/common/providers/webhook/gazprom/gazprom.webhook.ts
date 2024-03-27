@@ -36,17 +36,6 @@ export class GazpromWebhook {
     private mongoClient = MongoClient.getInstance().database;
     private helper: GazpromHelper;
     private dataSource: GazpromDataSource;
-
-    static successfulResponse = {
-        payload: [
-            {
-                'register-payment-response': [
-                    { result: [{ code: 1 }, { desc: 'accept payment' }] },
-                ],
-            },
-        ],
-        contentType: ContentType.Xml,
-    };
     private executionResult: GazpromExecutionResult;
 
     constructor(private readonly incomingRequest: IncomingRequestEntity) {
@@ -261,6 +250,9 @@ export class GazpromWebhook {
         });
     }
 
+    /**
+     * Get execution result
+     */
     getExecutionResult(): GazpromExecutionResult {
         return this.executionResult;
     }
@@ -286,5 +278,21 @@ export class GazpromWebhook {
             certificateFilePath,
             { encoding: 'utf-8' },
         );
+    }
+
+    /**
+     * Get successful response object
+     */
+    static getSuccessfulResponse() {
+        return {
+            payload: [
+                {
+                    'register-payment-response': [
+                        { result: [{ code: 1 }, { desc: 'accept payment' }] },
+                    ],
+                },
+            ],
+            contentType: ContentType.Xml,
+        };
     }
 }

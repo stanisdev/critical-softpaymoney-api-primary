@@ -11,7 +11,7 @@ export class GeneralUtil {
 
     static getPaymentSystemResponse(paymentSystem: PaymentSystem) {
         if (paymentSystem === PaymentSystem.Gazprom) {
-            return GazpromWebhook.successfulResponse;
+            return GazpromWebhook.getSuccessfulResponse();
         } else {
             return {
                 payload: {

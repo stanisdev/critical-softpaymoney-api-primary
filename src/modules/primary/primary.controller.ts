@@ -11,17 +11,11 @@ import {
     InternalServerErrorException,
     Response,
 } from '@nestjs/common';
-import * as xml from 'xml';
+import { FastifyReply } from 'fastify';
 import { PaymentSystemValidationPipe } from 'src/common/pipes/payment-system-validation.pipe';
 import { PrimaryService } from './primary.service';
-import { Dictionary, SuccessfulResponse } from 'src/common/types/general';
-import {
-    ContentType,
-    IncomingRequestStatus,
-    PaymentSystem,
-} from 'src/common/enums/general';
-import { FastifyReply } from 'fastify';
-import { GeneralUtil } from 'src/common/utils/general.util';
+import { Dictionary } from 'src/common/types/general';
+import { IncomingRequestStatus, PaymentSystem } from 'src/common/enums/general';
 
 @UsePipes(PaymentSystemValidationPipe)
 @Controller('/primary/:paymentSystem')
@@ -45,17 +39,12 @@ export class PrimaryController {
 
         if (processingResult === IncomingRequestStatus.Processed) {
             const responseParams =
-                GeneralUtil.getPaymentSystemResponse(paymentSystem);
+                this.primaryService.getResponseParamsByPaymentSystem(
+                    paymentSystem,
+                );
 
             reply.header('Content-Type', responseParams.contentType);
-            let responsePayload;
-
-            if (responseParams.contentType === ContentType.Xml) {
-                responsePayload = xml(responseParams.payload, true);
-            } else {
-                responsePayload = responseParams.payload;
-            }
-            reply.send(responsePayload);
+            reply.send(responseParams.payload);
         } else {
             throw new InternalServerErrorException('Incoming request failed');
         }
@@ -63,23 +52,26 @@ export class PrimaryController {
 
     /**
      * Entry point for POST method
-     *
-     * @todo: edit this method
      */
     @Post('/')
     @HttpCode(HttpStatus.OK)
     async indexPost(
         @Body() body: Dictionary,
         @Param('paymentSystem') paymentSystem: PaymentSystem,
-    ): Promise<SuccessfulResponse> {
+        @Response() reply: FastifyReply,
+    ): Promise<void> {
         const processingResult = await this.primaryService.processRequest(
             JSON.stringify(body),
             paymentSystem,
         );
         if (processingResult === IncomingRequestStatus.Processed) {
-            return {
-                ok: true,
-            };
+            const responseParams =
+                this.primaryService.getResponseParamsByPaymentSystem(
+                    paymentSystem,
+                );
+
+            reply.header('Content-Type', responseParams.contentType);
+            reply.send(responseParams.payload);
         } else {
             throw new InternalServerErrorException('Incoming request failed');
         }
