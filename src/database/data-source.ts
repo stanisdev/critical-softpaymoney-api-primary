@@ -6,6 +6,7 @@ import { IncomingRequestEntity } from './entities/incomingRequest.entity';
 import { LogEntity } from './entities/log.entity';
 import { OrderEntity } from './entities/order.entity';
 import { BalanceUpdateQueueEntity } from './entities/balanceUpdateQueue.entity';
+import { HandlerPortEntity } from './entities/handlerPort.entity';
 
 export const typeOrmDataSource = new DataSource({
     type: 'postgres',
@@ -24,6 +25,7 @@ export const typeOrmDataSource = new DataSource({
         IncomingRequestEntity,
         LogEntity,
         OrderEntity,
+        HandlerPortEntity,
     ],
     migrations: [],
 });

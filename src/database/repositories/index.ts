@@ -1,6 +1,7 @@
 import { typeOrmDataSource } from '../data-source';
 import { BalanceEntity } from '../entities/balance.entity';
 import { BalanceUpdateQueueEntity } from '../entities/balanceUpdateQueue.entity';
+import { HandlerPortEntity } from '../entities/handlerPort.entity';
 import { IncomingRequestEntity } from '../entities/incomingRequest.entity';
 import { LogEntity } from '../entities/log.entity';
 import { OrderEntity } from '../entities/order.entity';
@@ -18,3 +19,5 @@ export const balanceUpdateQueueRepository = typeOrmDataSource.getRepository(
 );
 export const logRepository = typeOrmDataSource.getRepository(LogEntity);
 export const orderRepository = typeOrmDataSource.getRepository(OrderEntity);
+export const handlerPortRepository =
+    typeOrmDataSource.getRepository(HandlerPortEntity);
