@@ -242,4 +242,27 @@ export class GazpromHelper {
             );
         }
     }
+
+    /**
+     * Parse payload amount and return the result
+     */
+    async parsePayloadAmount(
+        payloadAmount: string,
+        incomingRequestId: number,
+    ): Promise<number> {
+        const inputAmount = Number.parseFloat(payloadAmount);
+
+        if (Number.isNaN(inputAmount)) {
+            await GazpromHelper.databaseLogger.write(
+                DatabaseLogType.IncomingRequestAmountIsIncorrect,
+                {
+                    incomingRequestId,
+                },
+            );
+            throw new InternalServerErrorException(
+                `Amount value ("${payloadAmount}") is not a number `,
+            );
+        }
+        return inputAmount;
+    }
 }

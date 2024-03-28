@@ -112,22 +112,11 @@ export class GazpromWebhook {
         /**
          * Get order amount (price)
          */
-        const inputAmount = Number.parseFloat(<string>payload.amount);
-        if (Number.isNaN(inputAmount)) {
-            await GazpromWebhook.databaseLogger.write(
-                DatabaseLogType.IncomingRequestAmountIsIncorrect,
-                {
-                    incomingRequestId,
-                    orderId: String(order._id),
-                    'product.id': order.product,
-                    'productOwner.id': product.user,
-                    amount: payload.amount,
-                },
-            );
-            throw new InternalServerErrorException(
-                `Amount value ("${payload.amount}") is not a number `,
-            );
-        }
+        const inputAmount = await this.helper.parsePayloadAmount(
+            <string>payload.amount,
+            incomingRequestId,
+        );
+
         const commissionPercents =
             this.helper.getUserCommissionPercents(productOwner);
 
@@ -169,7 +158,19 @@ export class GazpromWebhook {
                 paymentTransactionRecord,
                 incomingRequestId,
             });
-            // @todo: add sending webhook to a merchant API (aka: "webhookInitial")
+            /**
+             * We need to send order metadata to a merchant webhook URL,
+             * even if order was rejected
+             *
+             * So create execution result
+             */
+            this.executionResult = new GazpromExecutionResult({
+                orderProcessed: true,
+                orderInstance: order,
+                productOwnerInstance: productOwner,
+                finalAmount: 0,
+                untouchedAmount: 0,
+            });
             return;
         }
 
@@ -242,7 +243,7 @@ export class GazpromWebhook {
          * Create execution result
          */
         this.executionResult = new GazpromExecutionResult({
-            orderPaid: true,
+            orderProcessed: true,
             orderInstance: order,
             productOwnerInstance: productOwner,
             finalAmount,

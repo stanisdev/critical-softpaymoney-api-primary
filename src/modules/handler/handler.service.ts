@@ -83,7 +83,7 @@ export class HandlerService {
 
             if (
                 executionResult instanceof Object &&
-                executionResult.value.orderPaid === true
+                executionResult.value.orderProcessed === true
             ) {
                 /**
                  * Send order info to external interaction server

@@ -3,7 +3,7 @@ import { MongoDocument } from 'src/common/types/general';
 export class GazpromExecutionResult {
     constructor(
         public value: {
-            orderPaid: boolean;
+            orderProcessed: boolean;
             orderInstance: MongoDocument;
             productOwnerInstance: MongoDocument;
             finalAmount: number;
