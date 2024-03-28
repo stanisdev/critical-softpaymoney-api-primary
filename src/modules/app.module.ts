@@ -3,19 +3,21 @@ import { PrimaryModule } from './primary/primary.module';
 import { typeOrmDataSource } from 'src/database/data-source';
 import { HandlerModule } from './handler/handler.module';
 import { ExternalInteractionModule } from './external-interaction/external-interaction.module';
-import RegularLogger from 'src/common/providers/logger/regular.logger';
 import { MongoClient } from 'src/common/providers/mongoClient';
+import RegularLogger from 'src/common/providers/logger/regular.logger';
+import { ServerBootstrap } from 'src/serverBootstrap';
 
 @Module({
     imports: [...AppModule.getModules()],
 })
 export class AppModule implements OnModuleDestroy {
-    private logger = RegularLogger.getInstance();
+    private regularLogger = RegularLogger.getInstance();
 
     async onModuleDestroy() {
+        await ServerBootstrap.getInstance().destroy();
         await typeOrmDataSource.destroy();
         await MongoClient.getInstance().closeConnection();
-        this.logger.log('All connections closed');
+        this.regularLogger.log('All connections closed');
     }
 
     /**
