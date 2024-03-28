@@ -66,10 +66,11 @@ export default {
         },
     },
     environment: {
-        isDev() {
-            return (
-                typeof nodeEnv === 'string' && nodeEnv.includes('development')
-            );
+        isDev(): boolean {
+            return Boolean(nodeEnv?.includes('development'));
+        },
+        isProd(): boolean {
+            return Boolean(nodeEnv?.includes('production'));
         },
     },
     timeout: {

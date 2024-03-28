@@ -53,3 +53,9 @@ export enum BalanceUpdateOperation {
     Increment = 'INCREMENT',
     Decrement = 'DECREMENT',
 }
+
+export enum ServerType {
+    Primary = 'PRIMARY',
+    ExternalInteraction = 'EXTERNAL_INTERACTION',
+    Handler = 'HANDLER',
+}

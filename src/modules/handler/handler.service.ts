@@ -20,7 +20,10 @@ export class HandlerService {
 
     constructor(private readonly helper: HandlerHelper) {}
 
-    async process(incomingRequestId: number) {
+    /**
+     * Process incoming request
+     */
+    async process(incomingRequestId: number): Promise<void | never> {
         const incomingRequest = await incomingRequestRepository
             .createQueryBuilder()
             .where('id = :id', { id: incomingRequestId })

@@ -40,4 +40,10 @@ export class MongoClient {
         }
         this.connection = new MongoConnection(connectionUrl);
     }
+    /**
+     * Close Db connection
+     */
+    async closeConnection() {
+        await this.connection.close();
+    }
 }
