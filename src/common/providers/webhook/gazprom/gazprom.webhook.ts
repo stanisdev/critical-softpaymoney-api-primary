@@ -19,10 +19,10 @@ import { join } from 'node:path';
 import { incomingRequestRepository } from 'src/database/repositories';
 import { isEmpty } from 'lodash';
 import { GazpromDataSource } from './gazprom.data-source';
+import { GazpromExecutionResult } from './gazprom.execution-result';
 import RegularLogger from '../../logger/regular.logger';
 import DatabaseLogger from '../../logger/database.logger';
 import config from 'src/common/config';
-import { GazpromExecutionResult } from './gazprom.execution-result';
 
 /**
  * Class to handle Gazprom bank webhooks
@@ -49,6 +49,11 @@ export class GazpromWebhook {
     async execute(): Promise<void> {
         const payload = this.helper.parseIncomingRequest();
         const incomingRequestId = this.incomingRequest.id;
+
+        let cardPan: string | undefined;
+        if (!isEmpty(payload['p.maskedPan'])) {
+            cardPan = <string>payload['p.maskedPan'];
+        }
 
         /**
          * Signature verification.
@@ -120,6 +125,11 @@ export class GazpromWebhook {
         const commissionPercents =
             this.helper.getUserCommissionPercents(productOwner);
 
+        /**
+         * Get amount in Ruble
+         *
+         * "inputAmount" - originally in kopecks
+         */
         const untouchedAmount = inputAmount / 100;
         const commissionSubtractedAmount = Math.floor(
             this.helper.subtractCommissionFromAmount(
@@ -135,15 +145,15 @@ export class GazpromWebhook {
          * If order was rejected
          */
         if (payload.result_code === '2') {
-            const paymentTransactionRecord = {
+            const paymentTransactionRecordPostgres = {
                 userId: String(productOwner._id),
                 productId: String(order.product),
                 amount: commissionSubtractedAmount,
                 orderId: String(order._id),
                 type: PaymentTransactionType.Receiving,
             };
-            if (!isEmpty(payload['p.maskedPan'])) {
-                paymentTransactionRecord['pan'] = payload['p.maskedPan'];
+            if (typeof cardPan === 'string') {
+                paymentTransactionRecordPostgres['pan'] = cardPan;
             }
             const orderRecord = {
                 mongoOrderId: String(order._id),
@@ -153,11 +163,29 @@ export class GazpromWebhook {
                 paymentAmount: order.payment.amount,
                 status: OrderStatus.Rejected,
             };
-            await this.helper.completeRejectedOrder({
+            await this.helper.completeRejectedOrderInPostgres({
                 orderRecord,
-                paymentTransactionRecord,
+                paymentTransactionRecord: paymentTransactionRecordPostgres,
                 incomingRequestId,
             });
+            /**
+             * Update order and create payment transaction in Mongo
+             */
+            await this.helper.rejectOrderInMongo(order._id);
+            const paymentTransactionRecordMongo = {
+                type: PaymentTransactionType.Receiving,
+                user: productOwner._id,
+                product: order.product,
+                amount: commissionSubtractedAmount,
+                order: order._id,
+                pan: '',
+            };
+            if (typeof cardPan === 'string') {
+                paymentTransactionRecordMongo.pan = cardPan;
+            }
+            await this.helper.insertPaymentTransationInMongo(
+                paymentTransactionRecordMongo,
+            );
             /**
              * We need to send order metadata to a merchant webhook URL,
              * even if order was rejected
@@ -186,6 +214,8 @@ export class GazpromWebhook {
 
         /**
          * Find product owner balance record
+         *
+         * @todo: move to the helper
          */
         const productOwnerBalance = await this.mongoClient
             .collection('payments')
@@ -218,8 +248,8 @@ export class GazpromWebhook {
             orderId: String(order._id),
             type: PaymentTransactionType.Receiving,
         };
-        if (!isEmpty(payload['p.maskedPan'])) {
-            paymentTransactionRecord['pan'] = payload['p.maskedPan'];
+        if (typeof cardPan === 'string') {
+            paymentTransactionRecord['pan'] = cardPan;
         }
         const orderRecord = {
             mongoOrderId: String(order._id),
@@ -231,13 +261,37 @@ export class GazpromWebhook {
             paidAt: new Date(),
             updatedAt: new Date(),
         };
-        await this.helper.completePaidOrder({
+        await this.helper.completePaidOrderInPostgres({
             productOwner,
             productOwnerBalance,
             orderRecord,
             paymentTransactionRecord,
             incomingRequestId,
         });
+        /**
+         * Update order and create payment transaction in Mongo
+         */
+        const confirmedOrderRecord = {
+            'payment.amount': untouchedAmount,
+            status: OrderStatus.Confirmed,
+            paidAt: new Date(),
+        };
+        await this.helper.confirmOrderInMongo(order._id, confirmedOrderRecord);
+
+        const paymentTransactionRecordMongo = {
+            type: PaymentTransactionType.Receiving,
+            user: productOwner._id,
+            product: order.product,
+            amount: finalAmount,
+            order: order._id,
+            pan: '',
+        };
+        if (typeof cardPan === 'string') {
+            paymentTransactionRecordMongo.pan = cardPan;
+        }
+        await this.helper.insertPaymentTransationInMongo(
+            paymentTransactionRecordMongo,
+        );
 
         /**
          * Create execution result

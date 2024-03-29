@@ -16,4 +16,10 @@ export class BalanceUpdateQueueEntity {
     @Column()
     @IsEnum(BalanceUpdateOperation)
     operation: BalanceUpdateOperation;
+
+    @Column()
+    isWithdrawal: boolean;
+
+    @Column()
+    paymentTransactionId: number;
 }

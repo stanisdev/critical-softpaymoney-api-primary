@@ -11,7 +11,9 @@ export class BalanceUpdateQueue1710923771583 implements MigrationInterface {
                 id INTEGER DEFAULT nextval('BalanceUpdateQueue_id_seq') PRIMARY KEY,
                 "balanceId" INTEGER NOT NULL,
                 amount DECIMAL NOT NULL,
-                operation BalanceUpdateOperation NOT NULL
+                operation BalanceUpdateOperation NOT NULL,
+                "isWithdrawal" BOOLEAN DEFAULT false,
+                "paymentTransactionId" INTEGER
             );
         `);
     }

@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { ObjectId } from 'mongodb';
 import { InternalServerErrorException } from '@nestjs/common';
 import { IncomingRequestEntity } from 'src/database/entities/incomingRequest.entity';
 import { Dictionary, MongoDocument } from 'src/common/types/general';
@@ -7,11 +8,13 @@ import {
     BalanceUpdateOperation,
     DatabaseLogType,
     IncomingRequestStatus,
+    OrderStatus,
     Сurrency,
 } from 'src/common/enums/general';
 import { PaymentTransactionEntity } from 'src/database/entities/paymentTransaction.entity';
 import { OrderEntity } from 'src/database/entities/order.entity';
 import { MathUtil } from 'src/common/utils/math.util';
+import { MongoClient } from '../../mongoClient';
 import DatabaseLogger from '../../logger/database.logger';
 import { balanceRepository } from 'src/database/repositories';
 import { BalanceEntity } from 'src/database/entities/balance.entity';
@@ -19,6 +22,7 @@ import { BalanceUpdateQueueEntity } from 'src/database/entities/balanceUpdateQue
 
 export class GazpromHelper {
     private static databaseLogger = DatabaseLogger.getInstance();
+    private mongoClient = MongoClient.getInstance().database;
 
     constructor(private readonly incomingRequest: IncomingRequestEntity) {}
 
@@ -90,7 +94,7 @@ export class GazpromHelper {
      * Create order (original data is taken from Mongo)
      * and create transaction in Postgres
      */
-    async completeRejectedOrder(params: {
+    async completeRejectedOrderInPostgres(params: {
         orderRecord: Dictionary;
         paymentTransactionRecord: Dictionary;
         incomingRequestId: number;
@@ -122,7 +126,10 @@ export class GazpromHelper {
         );
     }
 
-    async completePaidOrder(params: {
+    /**
+     * Execute Postgres transaction to complete the given order
+     */
+    async completePaidOrderInPostgres(params: {
         productOwner: Dictionary;
         productOwnerBalance: Dictionary;
         orderRecord: Dictionary;
@@ -216,6 +223,46 @@ export class GazpromHelper {
                     .execute();
             },
         );
+    }
+
+    /**
+     * Update order in Mongo as rejected
+     */
+    async rejectOrderInMongo(orderId: ObjectId): Promise<void> {
+        await this.mongoClient.collection('orders').updateOne(
+            {
+                _id: orderId,
+            },
+            {
+                status: OrderStatus.Rejected,
+            },
+        );
+    }
+
+    /**
+     * Confirm order in Mongo
+     */
+    async confirmOrderInMongo(
+        orderId: ObjectId,
+        orderRecord: Dictionary,
+    ): Promise<void> {
+        await this.mongoClient.collection('orders').updateOne(
+            {
+                _id: orderId,
+            },
+            orderRecord,
+        );
+    }
+
+    /**
+     * Insert payment transation in Mongo
+     */
+    async insertPaymentTransationInMongo(
+        paymentTransactionRecord: Dictionary,
+    ): Promise<void> {
+        await this.mongoClient
+            .collection('transactions')
+            .insertOne(paymentTransactionRecord);
     }
 
     /**

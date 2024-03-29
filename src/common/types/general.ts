@@ -1,7 +1,7 @@
-import { Document, WithId } from 'mongodb';
+import { Document, ObjectId, WithId } from 'mongodb';
 
 export type Dictionary = {
-    [key: string]: string | number | Date | boolean | Dictionary;
+    [key: string]: string | number | Date | boolean | ObjectId | Dictionary;
 };
 
 export type SuccessfulResponse = {
