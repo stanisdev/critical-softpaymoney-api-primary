@@ -55,7 +55,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
                     errorMessage = errorInstance.message;
                 }
             }
-            if (status === HttpStatus.NOT_FOUND) {
+            if (
+                [HttpStatus.NOT_FOUND, HttpStatus.TOO_MANY_REQUESTS].includes(
+                    status,
+                )
+            ) {
                 errorMessage = statusCodeToPhrase(status);
             }
             if (isEmpty(errorMessage)) {

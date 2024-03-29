@@ -81,4 +81,8 @@ export default {
     gazprom: {
         certificateFileName: env.GAZPROM_CERTIFICATE_FILE_NAME,
     },
+    rateLimiter: {
+        restrictionPeriod: +env.RATE_LIMITER_RESTRICTION_PERIOD,
+        maxRequests: +env.RATE_LIMITER_MAX_REQUESTS,
+    },
 };
