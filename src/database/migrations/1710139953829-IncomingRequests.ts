@@ -9,7 +9,7 @@ export class IncomingRequests1710139953829 implements MigrationInterface {
 
             CREATE TABLE "IncomingRequests" (
                 id INTEGER DEFAULT nextval('IncomingRequests_id_seq') PRIMARY KEY,
-                payload VARCHAR NOT NULL,
+                payload jsonb NOT NULL,
                 status IncomingRequestStatus NOT NULL,
                 "paymentSystem" VARCHAR NOT NULL, -- Payment system name
                 "createdAt" TIMESTAMP DEFAULT current_timestamp,

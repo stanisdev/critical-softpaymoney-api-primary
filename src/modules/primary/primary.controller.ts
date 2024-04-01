@@ -33,7 +33,7 @@ export class PrimaryController {
         @Response() reply: FastifyReply,
     ): Promise<void> {
         const processingResult = await this.primaryService.processRequest(
-            JSON.stringify(query),
+            query,
             paymentSystem,
         );
 
@@ -61,7 +61,7 @@ export class PrimaryController {
         @Response() reply: FastifyReply,
     ): Promise<void> {
         const processingResult = await this.primaryService.processRequest(
-            JSON.stringify(body),
+            body,
             paymentSystem,
         );
         if (processingResult === IncomingRequestStatus.Processed) {

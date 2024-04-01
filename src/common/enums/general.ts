@@ -17,6 +17,7 @@ export enum PaymentSystem {
 export enum DatabaseLogType {
     ServerError = 'server-error',
     IncomingRequestNotFound = 'incoming-request-not-found',
+    DuplicateIncomingRequest = 'duplicate-incoming-request',
     IncomingRequestProcessedOrFailed = 'incoming-request-already-processed-or-failed',
     UnknownPaymentSystem = 'unknown-payment-system',
     HandlerHasNotProcessedRequest = 'handler-has-not-processed-request',

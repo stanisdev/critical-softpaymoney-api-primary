@@ -10,7 +10,9 @@ import {
     PaymentSystem,
 } from 'src/common/enums/general';
 import { IncomingRequestEntity } from 'src/database/entities/incomingRequest.entity';
+import { Dictionary } from 'src/common/types/general';
 import { HttpClient } from 'src/common/providers/httpClient';
+import { typeOrmDataSource } from 'src/database/data-source';
 import DatabaseLogger from 'src/common/providers/logger/database.logger';
 import config from 'src/common/config';
 
@@ -25,6 +27,24 @@ export class PrimaryHelper {
         private requestPayload: string,
         private paymentSystem: PaymentSystem,
     ) {}
+
+    /**
+     * Check whether a webhook was received twice
+     */
+    async isDoubleRequest(inputData: Dictionary): Promise<boolean> {
+        const orderPaymentId = inputData['o.CustomerKey'];
+
+        if (this.paymentSystem === PaymentSystem.Gazprom) {
+            const foundResult = await incomingRequestRepository
+                .createQueryBuilder('ir')
+                .select(['ir.id'])
+                .where(`ir.payload @> '{"o.CustomerKey":"${orderPaymentId}"}'`)
+                .getOne();
+
+            return foundResult instanceof IncomingRequestEntity;
+        }
+        return false;
+    }
 
     /**
      * Process incoming request
@@ -91,13 +111,19 @@ export class PrimaryHelper {
      * Save incoming request in Postgres
      */
     private async saveIncomingRequestInPostgres(): Promise<void> {
-        const incomingRequest = new IncomingRequestEntity();
-        incomingRequest.payload = this.requestPayload;
-        incomingRequest.status = IncomingRequestStatus.Received;
-        incomingRequest.paymentSystem = this.paymentSystem;
-
-        await incomingRequestRepository.save(incomingRequest);
-        this.incomingRequestInstance = incomingRequest;
+        const [result] = await typeOrmDataSource.query(`
+            INSERT INTO "IncomingRequests"
+                ("payload", "status", "paymentSystem", "createdAt", "updatedAt")
+            VALUES (
+                '${this.requestPayload}',
+                'RECEIVED',
+                'GAZPROM',
+                DEFAULT,
+                DEFAULT
+            ) RETURNING "id"
+        `);
+        this.incomingRequestInstance = new IncomingRequestEntity();
+        this.incomingRequestInstance.id = result.id;
     }
 
     /**

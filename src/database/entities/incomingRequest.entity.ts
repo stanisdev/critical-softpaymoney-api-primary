@@ -13,7 +13,7 @@ export class IncomingRequestEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column('jsonb', { nullable: false })
     payload: string;
 
     @Column()
