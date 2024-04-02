@@ -2,35 +2,30 @@ import { ObjectId } from 'mongodb';
 import {
     Dictionary,
     ExternalInteractionPayload,
-    MongoDocument,
 } from 'src/common/types/general';
-import DatabaseLogger from 'src/common/providers/logger/database.logger';
 import HTTPMethod from 'http-method-enum';
 import config from 'src/common/config';
-import { DatabaseLogType } from 'src/common/enums/general';
-import { HttpStatus, InternalServerErrorException } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { MongoClient } from 'src/common/providers/mongoClient';
 import { GeneralUtil } from 'src/common/utils/general.util';
 import { HttpClient } from '../httpClient';
+import { ExternalInteractionDataSource } from 'src/modules/external-interaction/external-interaction.data-source';
 
 export class MerchantWebhookInteraction {
-    private payload: ExternalInteractionPayload;
-    private databaseLogger = DatabaseLogger.getInstance();
     private mongoClient = MongoClient.getInstance().database;
-    private order: MongoDocument;
-    private product: MongoDocument;
-    private merchantWebhook: MongoDocument;
     private webhookIsAvailable = true;
     private webhookRequestPayload: Dictionary;
 
-    constructor(private compressedPayload: string) {}
+    constructor(
+        private payload: ExternalInteractionPayload,
+        private dataSource: ExternalInteractionDataSource,
+    ) {}
 
     /**
      * Start the process
      */
-    async execute() {
-        this.parseCompressedPayload();
-        await this.fillDataSource();
+    async execute(): Promise<void> {
+        this.validateDataSource();
 
         if (!this.webhookIsAvailable) {
             return;
@@ -43,21 +38,23 @@ export class MerchantWebhookInteraction {
      * Send payload to the Merchant webhook API
      */
     async sendPayloadToWebhook(): Promise<void> {
+        const { merchantWebhook, order } = this.dataSource;
+        const { webhookRequestPayload } = this;
+
         const httpClient = new HttpClient({
-            url: this.merchantWebhook.link,
-            body: this.webhookRequestPayload,
+            url: merchantWebhook.link,
+            body: webhookRequestPayload,
             method: HTTPMethod.POST,
             timeout: config.timeout.merchantWebhook,
         });
         const requestResult = await httpClient.sendRequest();
-        const { webhookRequestPayload, merchantWebhook } = this;
 
         /**
          * Create record in 'webhook_journals' collection
          */
         const webhookJournalRecord = {
             url: merchantWebhook.link,
-            order: this.order._id,
+            order: order._id,
             webhook: merchantWebhook._id,
             requestBody: webhookRequestPayload,
             responseBody: JSON.stringify(
@@ -74,9 +71,8 @@ export class MerchantWebhookInteraction {
 
         const webhookJournalMetadata = {
             id: String(insertResult.insertedId),
-            order: String(this.order._id),
+            order: String(order._id),
         };
-
         /**
          * If request failed
          */
@@ -123,7 +119,10 @@ export class MerchantWebhookInteraction {
         const oneHour = 1000 * 60 * 60;
 
         setTimeout(() => {
-            new MerchantWebhookInteraction(this.compressedPayload).execute();
+            new MerchantWebhookInteraction(
+                this.payload,
+                this.dataSource,
+            ).execute();
         }, oneHour);
     }
 
@@ -131,11 +130,12 @@ export class MerchantWebhookInteraction {
      * Build payload for request to a merchant webhook
      */
     private buildWebhookPayload(): void {
-        const promoCode = this.product.promocodes?.find(
-            (element: Dictionary) => element.id === this.order.promocode?.id,
-        );
-        const { order, product, payload } = this;
+        const { product, order, merchantWebhook } = this.dataSource;
+        const { payload } = this;
 
+        const promoCode = product.promocodes?.find(
+            (element: Dictionary) => element.id === order.promocode?.id,
+        );
         this.webhookRequestPayload = {
             paidAt: new Date(order.paidAt as Date).toISOString(),
             promocodeName: promoCode?.name || '',
@@ -153,7 +153,7 @@ export class MerchantWebhookInteraction {
         };
         const signatureHashPayload = Object.entries({
             ...this.webhookRequestPayload,
-            secret: this.merchantWebhook.secret,
+            secret: merchantWebhook.secret,
         })
             .sort()
             .reduce(
@@ -179,44 +179,10 @@ export class MerchantWebhookInteraction {
     }
 
     /**
-     * Parse raw, 'stringified' payload
+     * Validate data source
      */
-    private parseCompressedPayload(): void | never {
-        try {
-            this.payload = JSON.parse(this.compressedPayload);
-        } catch {
-            this.databaseLogger.write(
-                DatabaseLogType.CannotParseExternalInteractionPayload,
-                {
-                    payload: this.compressedPayload,
-                },
-            );
-            throw new InternalServerErrorException(
-                'Cannot parse external interaction payload',
-            );
-        }
-    }
-
-    /**
-     * Get necessary records from MongoDB
-     *
-     * find: order, product, merchantWebhook
-     */
-    private async fillDataSource(): Promise<void> {
-        const orderId = <string>this.payload.orderId;
-        const productOwnerId = <string>this.payload.productOwnerId;
-
-        this.order = await this.mongoClient.collection('orders').findOne({
-            _id: new ObjectId(orderId),
-        });
-        this.product = await this.mongoClient.collection('products').findOne({
-            _id: this.order.product,
-        });
-        const merchantWebhook = await this.mongoClient
-            .collection('webhooks')
-            .findOne({
-                user: new ObjectId(productOwnerId),
-            });
+    private validateDataSource(): void {
+        const { merchantWebhook } = this.dataSource;
         if (
             !(merchantWebhook instanceof Object) ||
             typeof merchantWebhook.secret !== 'string' ||
@@ -225,6 +191,5 @@ export class MerchantWebhookInteraction {
             this.webhookIsAvailable = false;
             return;
         }
-        this.merchantWebhook = merchantWebhook;
     }
 }

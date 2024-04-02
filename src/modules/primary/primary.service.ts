@@ -29,12 +29,9 @@ export class PrimaryService {
             /**
              * If the server received a webhook duplicate
              */
-            const logPayload = {
-                orderPaymentId: inputData['o.CustomerKey'],
-            };
             await this.databaseLogger.write(
                 DatabaseLogType.DuplicateIncomingRequest,
-                logPayload,
+                inputData,
             );
             throw new BadRequestException(
                 'Order with such ID has been already sent',

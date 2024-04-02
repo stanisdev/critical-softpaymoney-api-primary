@@ -12,6 +12,7 @@ export enum IncomingRequestStatus {
 
 export enum PaymentSystem {
     Gazprom = 'GAZPROM',
+    Tinkoff = 'TINKOFF',
 }
 
 export enum DatabaseLogType {
@@ -59,4 +60,10 @@ export enum ServerType {
     Primary = 'PRIMARY',
     ExternalInteraction = 'EXTERNAL_INTERACTION',
     Handler = 'HANDLER',
+}
+
+export enum PaymentReceiptStatus {
+    Sell = 'sell', // приход
+    SellRefund = 'sell_refund', // возврат
+    Buy = 'buy', // расход
 }

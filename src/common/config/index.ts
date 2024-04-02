@@ -85,4 +85,13 @@ export default {
         restrictionPeriod: +env.RATE_LIMITER_RESTRICTION_PERIOD,
         maxRequests: +env.RATE_LIMITER_MAX_REQUESTS,
     },
+    atol: {
+        login: env.ATOL_LOGIN,
+        password: env.ATOL_PASS,
+        url: env.ATOL_URL,
+        groupCode: env.ATOL_GROUP_CODE,
+        companyEmail: env.ATOL_COMPANY_EMAIL,
+        inn: env.ATOL_INN,
+        paymentUrl: env.ATOL_PAYMENT_URL,
+    },
 };

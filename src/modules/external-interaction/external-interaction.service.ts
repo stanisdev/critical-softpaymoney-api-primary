@@ -1,15 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { EntryPointDto } from './dto/entry-point.dto';
-import { MerchantWebhookInteraction } from 'src/common/providers/external-interactions/merchant-webhook.interaction';
+import { ExternalInteractionHelper } from './external-interaction.helper';
+import { ExternalInteractionDataSource } from './external-interaction.data-source';
+import { AtolExecutor } from 'src/common/providers/atol/atol.executor';
 
 @Injectable()
 export class ExternalInteractionService {
+    constructor(private helper: ExternalInteractionHelper) {}
+
+    /**
+     * Start class execution
+     */
     async execute({
         payload: compressedPayload,
     }: EntryPointDto): Promise<void> {
-        const merchantWebhook = new MerchantWebhookInteraction(
-            compressedPayload,
-        );
-        await merchantWebhook.execute();
+        const payload = this.helper.parseCompressedPayload(compressedPayload);
+
+        const dataSource = new ExternalInteractionDataSource(payload);
+        await dataSource.load();
+
+        /**
+         * @todo: uncomment 2 lines below
+         */
+        // const merchantWebhook = new MerchantWebhookInteraction(payload, dataSource);
+        // await merchantWebhook.execute();
+
+        const atolExecutor = new AtolExecutor(dataSource);
+        atolExecutor.run();
     }
 }

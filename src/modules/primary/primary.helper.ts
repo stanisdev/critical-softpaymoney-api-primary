@@ -32,9 +32,16 @@ export class PrimaryHelper {
      * Check whether a webhook was received twice
      */
     async isDoubleRequest(inputData: Dictionary): Promise<boolean> {
-        const orderPaymentId = inputData['o.CustomerKey'];
-
         if (this.paymentSystem === PaymentSystem.Gazprom) {
+            let orderPaymentId = <string>inputData['o.CustomerKey'];
+
+            try {
+                /**
+                 * A light protection from SQL injections
+                 */
+                orderPaymentId = orderPaymentId.split(' ').join('');
+            } catch {}
+
             const foundResult = await incomingRequestRepository
                 .createQueryBuilder('ir')
                 .select(['ir.id'])
