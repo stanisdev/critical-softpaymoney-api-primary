@@ -11,7 +11,7 @@ export class AtolExecutor {
     /**
      * Run the process of interaction with atol
      */
-    async run() {
+    async run(): Promise<void> {
         const { order } = this.dataSource;
         /**
          * Validation

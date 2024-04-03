@@ -30,6 +30,9 @@ export enum DatabaseLogType {
     IncomingRequestAmountIsIncorrect = 'incoming-request-amount-is-incorrect',
     MongoOrderHasNoPaymentObject = 'mongo-order-has-no-payment-object',
     CannotParseExternalInteractionPayload = 'cannot-parse-external-interaction-payload',
+    GetCourseGetTokenError = 'get-course-get-token-error',
+    GetCourseGetOldTransactionNumberError = 'get-course-get-old-transaction-number-error',
+    GetCourseCreateNewTransactionError = 'get-course-create-new-transaction-error',
 }
 
 export enum PaymentTransactionType {

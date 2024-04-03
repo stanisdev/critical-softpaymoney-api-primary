@@ -3,6 +3,7 @@ import { EntryPointDto } from './dto/entry-point.dto';
 import { ExternalInteractionHelper } from './external-interaction.helper';
 import { ExternalInteractionDataSource } from './external-interaction.data-source';
 import { AtolExecutor } from 'src/common/providers/atol/atol.executor';
+import { GetCourseExecutor } from 'src/common/providers/getCourse/get-course.executor';
 
 @Injectable()
 export class ExternalInteractionService {
@@ -27,5 +28,8 @@ export class ExternalInteractionService {
 
         const atolExecutor = new AtolExecutor(dataSource);
         atolExecutor.run();
+
+        const getCourseExecutor = new GetCourseExecutor(dataSource);
+        getCourseExecutor.run();
     }
 }
