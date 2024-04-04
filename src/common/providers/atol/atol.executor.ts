@@ -54,6 +54,7 @@ export class AtolExecutor {
         const operationId = {
             sell: 'S-',
             sell_refund: 'SR-',
+            buy: 'B-'
         };
         const paymentType = {
             GAZPROM: 'G-',
@@ -65,7 +66,7 @@ export class AtolExecutor {
          * @todo
          * This is a workaround and should be modified in the future
          */
-        const operationType = 'buy'; // 'sell' or 'buy'
+        const operationType = 'sell'; // 'sell' or 'buy'
 
         /**
          * Send HTTP request to atol
