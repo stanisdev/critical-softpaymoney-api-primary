@@ -5,28 +5,24 @@ import {
     InitialPaymentResponseToken,
 } from './atol.interfaces';
 import config from 'src/common/config';
-import { PaymentInfo, RequestMethod } from './atol.enums';
+import { PaymentInfo, AtolRequestMethod } from './atol.enums';
 import { AtolOperation } from './atol.types';
 
 export class AtolClient {
-    private login: string;
-    private password: string;
+    private login = config.atol.login;
+    private password = config.atol.password;
     private groupCode: string;
     private companyEmail: string;
-    private inn: string;
-    private paymentUrl: string;
+    private inn = config.atol.inn;
+    private paymentUrl = config.atol.paymentUrl;
     private axios: Axios;
 
     /**
      * Build the client instance
      */
     constructor() {
-        this.login = config.atol.login;
-        this.password = config.atol.password;
         this.groupCode = config.atol.groupCode;
         this.companyEmail = config.atol.companyEmail;
-        this.inn = config.atol.inn;
-        this.paymentUrl = config.atol.paymentUrl;
         this.axios = axios.create({
             baseURL: config.atol.url,
         });
@@ -37,32 +33,60 @@ export class AtolClient {
      */
     async getToken(): Promise<InitialPaymentResponseToken> {
         try {
-            const data = {
+            const credentials = {
                 login: this.login,
                 pass: this.password,
             };
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json; charset=utf-8',
+            /**
+             * @todo: remove the expression below
+             */
+            // return {
+            //     status: true,
+            //     data: {
+            //         token: 'ieh3KpTZmrBta7nhoVPducJa_Px_Ay_LbKUql31NQYpa0h9O147LuYePyw2JpRb5bQdw6lf7hLSWyGid0_PecDDSLOFlGFd1qwp0PnKD0dmwMrjgiBA71eK2jmjqB0bG',
+            //         error: null,
+            //         timestamp: '03.04.2024 15:48:45',
+            //     },
+            //     success: true,
+            //     message: 'OK'
+            // };
+
+            const requestResult = await this.axios.post(
+                `/${AtolRequestMethod.GetToken}`,
+                credentials,
+                {
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8',
+                    },
                 },
-            };
-            const response = await this.axios.post(
-                `/${RequestMethod.GETTOKEN}`,
-                data,
-                config,
             );
+            /**
+             * Example:
+                {
+                    status: true,
+                    data: {
+                        token: 'ieh3KpTZmrBta7nhoVPducJa_Px_Ay_LbKUql31NQYpa0h9O147LuYePyw2JpRb5g7LSHHGFKerjT1ZyrwK-sTRtCNk7xxpiZsrdR8l_cFXt7t5usEbgfSxayUSpFS81',
+                        error: null,
+                        timestamp: '03.04.2024 15:20:56'
+                    },
+                    success: true,
+                    message: 'OK'
+                }
+             */
             return {
                 status: true,
-                data: response.data,
-                success: response.data.token ? true : false,
-                message: response.data.token
+                data: requestResult.data,
+                success: requestResult.data.token ? true : false,
+                message: requestResult.data.token
                     ? 'OK'
-                    : response.data.error.text
-                      ? response.data.error.text
+                    : requestResult.data.error.text
+                      ? requestResult.data.error.text
                       : 'error getToken',
             };
         } catch (error: any) {
-            console.log(error);
+            /**
+             * @todo: log the error to DB
+             */
             return {
                 status: false,
                 data: error?.response?.data ? error?.response?.data : null,
@@ -86,60 +110,79 @@ export class AtolClient {
     ): Promise<InitialPaymentResponse> {
         try {
             const token = await this.getToken();
-            if (token.status && token.data?.token && token.data?.timestamp) {
-                const data = {
+
+            /**
+             * Auth token was gotten successfully
+             */
+            if (
+                token.status === true &&
+                typeof token.data?.token === 'string' &&
+                token.data?.timestamp
+            ) {
+                const clientInfo = {
+                    email: userContacts.Email ? userContacts.Email : 'none',
+                    phone: userContacts.Phone ? userContacts.Phone : 'none',
+                };
+                const companyInfo = {
+                    email: this.companyEmail,
+                    sno: PaymentInfo.Sno,
+                    inn: this.inn,
+                    payment_address: this.paymentUrl,
+                };
+                const requestPayload = {
                     timestamp: token.data.timestamp,
                     external_id: paymentId,
                     receipt: {
-                        client: {
-                            email: userContacts.Email
-                                ? userContacts.Email
-                                : 'none',
-                            phone: userContacts.Phone
-                                ? userContacts.Phone
-                                : 'none',
-                        },
-                        company: {
-                            email: this.companyEmail,
-                            sno: PaymentInfo.SNO,
-                            inn: this.inn,
-                            payment_address: this.paymentUrl,
-                        },
+                        client: clientInfo,
+                        company: companyInfo,
                         items: [
                             {
-                                name: name,
+                                name,
                                 price: amount,
-                                quantity: PaymentInfo.QUANTITY,
-                                measure: PaymentInfo.MEASURE,
+                                quantity: PaymentInfo.Quantity,
+                                measure: PaymentInfo.Measure,
                                 sum: amount,
-                                payment_method: PaymentInfo.PAYMENT_METHOD,
-                                payment_object: PaymentInfo.PAYMENT_OBJECT,
+                                payment_method: PaymentInfo.PaymentMethod,
+                                payment_object: PaymentInfo.PaymentObject,
                                 vat: {
-                                    type: PaymentInfo.VAT_TYPE,
+                                    type: PaymentInfo.VatType,
                                 },
                                 user_data: paymentId,
                             },
                         ],
                         payments: [
                             {
-                                type: PaymentInfo.PAYMENTS_TYPE,
+                                type: PaymentInfo.PaymentsType,
                                 sum: amount,
                             },
                         ],
                         total: amount,
                     },
                 };
-                const config = {
-                    headers: {
-                        'Content-Type': 'application/json; charset=utf-8',
-                        Token: token.data.token,
-                    },
-                };
                 const response = await this.axios.post(
                     `/${this.groupCode}/${operation}`,
-                    data,
-                    config,
+                    requestPayload,
+                    {
+                        headers: {
+                            'Content-Type': 'application/json; charset=utf-8',
+                            Token: token.data.token,
+                        },
+                    },
                 );
+                /**
+                 * Example:
+                    {
+                        status: true,
+                        data: {
+                            uuid: 'b0ca83c1-8814-4c06-8741-89836a734aa7',
+                            status: 'wait',
+                            error: null,
+                            timestamp: '03.04.2024 16:20:42'
+                        },
+                        success: true,
+                        message: 'OK'
+                    }
+                 */
                 return {
                     status: true,
                     data: response.data,
@@ -155,6 +198,9 @@ export class AtolClient {
                               : 'error CreateOperation',
                 };
             } else {
+                /**
+                 * @todo: log the error to database
+                 */
                 return {
                     status: false,
                     data: token.data,
@@ -163,7 +209,9 @@ export class AtolClient {
                 };
             }
         } catch (error: any) {
-            console.log(error);
+            /**
+             * @todo: log the error to database
+             */
             return {
                 status: false,
                 data: error?.response?.data ? error?.response?.data : null,
@@ -181,16 +229,49 @@ export class AtolClient {
     async getReport(uuid: string): Promise<InitialPaymentReport> {
         try {
             const token = await this.getToken();
+
             if (token.status && token.data?.token && token.data?.timestamp) {
-                const config = {
-                    headers: {
-                        Token: token.data.token,
-                    },
-                };
                 const response = await this.axios.get(
-                    `/${this.groupCode}/${RequestMethod.REPORT}/${uuid}`,
-                    config,
+                    `/${this.groupCode}/${AtolRequestMethod.Report}/${uuid}`,
+                    {
+                        headers: {
+                            Token: token.data.token,
+                        },
+                    },
                 );
+                /**
+                 * Example:
+                    {
+                        status: true,
+                        data: {
+                            callback_url: '',
+                            daemon_code: 'quasar',
+                            device_code: 'KKT008439',
+                            warnings: null,
+                            error: null,
+                            external_id: 'G-S-NBCF9Q1N6R09JH2K',
+                            group_code: 'group_code_44425',
+                            payload: {
+                            ecr_registration_number: '0007492718034364',
+                            fiscal_document_attribute: 4145935932,
+                            fiscal_document_number: 57832,
+                            fiscal_receipt_number: 51,
+                            fn_number: '7280440500244928',
+                            fns_site: 'nalog.gov.ru',
+                            receipt_datetime: '03.04.2024 16:46:00',
+                            shift_number: 120,
+                            total: 101,
+                            ofd_inn: '7704211201',
+                            ofd_receipt_url: 'https://receipt.taxcom.ru/v01/show?fp=4145935932&s=101&sf=False&sfn=False'
+                            },
+                            status: 'done',
+                            uuid: 'b430ed6b-d394-4582-830b-fb80640ca79f',
+                            timestamp: '03.04.2024 16:46:01'
+                        },
+                        success: true,
+                        message: 'OK'
+                    }
+                 */
                 return {
                     status: true,
                     data: response.data,
@@ -206,6 +287,10 @@ export class AtolClient {
                               : 'error getReport',
                 };
             } else {
+                /**
+                 * @todo:
+                 * log the error to database
+                 */
                 return {
                     status: false,
                     data: token.data,
@@ -214,7 +299,9 @@ export class AtolClient {
                 };
             }
         } catch (error: any) {
-            console.log(error);
+            /**
+             * @todo: log the error to database
+             */
             return {
                 status: false,
                 data: error?.response?.data ? error?.response?.data : null,

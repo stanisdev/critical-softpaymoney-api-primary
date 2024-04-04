@@ -87,7 +87,7 @@ export default {
     },
     atol: {
         login: env.ATOL_LOGIN,
-        password: env.ATOL_PASS,
+        password: env.ATOL_PASSWORD,
         url: env.ATOL_URL,
         groupCode: env.ATOL_GROUP_CODE,
         companyEmail: env.ATOL_COMPANY_EMAIL,

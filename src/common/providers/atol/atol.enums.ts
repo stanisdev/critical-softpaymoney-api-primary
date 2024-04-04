@@ -1,16 +1,16 @@
-export enum RequestMethod {
-    GETTOKEN = 'getToken',
-    REPORT = 'report',
+export enum AtolRequestMethod {
+    GetToken = 'getToken',
+    Report = 'report',
 }
 
 export enum PaymentInfo {
-    SNO = 'usn_income_outcome',
-    PAYMENT_METHOD = 'full_payment',
-    QUANTITY = 1,
-    MEASURE = 0,
-    PAYMENT_OBJECT = 'service',
-    PAYMENTS_TYPE = 1,
-    VAT_TYPE = 'none',
+    Sno = 'usn_income_outcome',
+    PaymentMethod = 'full_payment',
+    Quantity = 1,
+    Measure = 0,
+    PaymentObject = 'service', //
+    PaymentsType = 1,
+    VatType = 'none',
 }
 
 // eslint-disable-line no-use-before-define
