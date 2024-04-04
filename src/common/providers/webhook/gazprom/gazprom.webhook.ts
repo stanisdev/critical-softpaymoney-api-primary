@@ -57,7 +57,9 @@ export class GazpromWebhook {
 
         /**
          * Signature verification.
-         * @notice Need to be completed
+         * @notice
+         * @todo
+         * Need to be completed
          */
         const url = '?';
         const signature = '?';
@@ -69,6 +71,9 @@ export class GazpromWebhook {
                 GazpromWebhook.certificates.signatureVerification,
             );
         } catch {
+            /**
+             * @todo: replace by 'false'
+             */
             isSignatureCorrect = true; // <---- @todo: replace by 'false'
         }
         if (!isSignatureCorrect) {

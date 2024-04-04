@@ -34,6 +34,9 @@ export enum DatabaseLogType {
     GetCourseGetOldTransactionNumberError = 'get-course-get-old-transaction-number-error',
     GetCourseCreateNewTransactionError = 'get-course-create-new-transaction-error',
     ExternalInteractionRequestFailed = 'external-interaction-request-failed',
+    CannotGetAtolAuthToken = 'cannot-get-atol-auth-token',
+    CannotCreateAtolCheck = 'cannot-create-atol-check',
+    CannotGetReportAboutCheck = 'cannot-get-report-about-check',
 }
 
 export enum PaymentTransactionType {

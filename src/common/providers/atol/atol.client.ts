@@ -7,6 +7,8 @@ import {
 import config from 'src/common/config';
 import { PaymentInfo, AtolRequestMethod } from './atol.enums';
 import { AtolOperation } from './atol.types';
+import DatabaseLogger from '../logger/database.logger';
+import { DatabaseLogType } from 'src/common/enums/general';
 
 export class AtolClient {
     private login = config.atol.login;
@@ -16,6 +18,7 @@ export class AtolClient {
     private inn = config.atol.inn;
     private paymentUrl = config.atol.paymentUrl;
     private axios: Axios;
+    private static databaseLogger = DatabaseLogger.getInstance();
 
     /**
      * Build the client instance
@@ -37,20 +40,6 @@ export class AtolClient {
                 login: this.login,
                 pass: this.password,
             };
-            /**
-             * @todo: remove the expression below
-             */
-            // return {
-            //     status: true,
-            //     data: {
-            //         token: 'ieh3KpTZmrBta7nhoVPducJa_Px_Ay_LbKUql31NQYpa0h9O147LuYePyw2JpRb5bQdw6lf7hLSWyGid0_PecDDSLOFlGFd1qwp0PnKD0dmwMrjgiBA71eK2jmjqB0bG',
-            //         error: null,
-            //         timestamp: '03.04.2024 15:48:45',
-            //     },
-            //     success: true,
-            //     message: 'OK'
-            // };
-
             const requestResult = await this.axios.post(
                 `/${AtolRequestMethod.GetToken}`,
                 credentials,
@@ -85,8 +74,14 @@ export class AtolClient {
             };
         } catch (error: any) {
             /**
-             * @todo: log the error to DB
+             * Log the error to database
              */
+            await AtolClient.databaseLogger.write(
+                DatabaseLogType.CannotGetAtolAuthToken,
+                {
+                    error: JSON.stringify(error),
+                },
+            );
             return {
                 status: false,
                 data: error?.response?.data ? error?.response?.data : null,
@@ -210,8 +205,14 @@ export class AtolClient {
             }
         } catch (error: any) {
             /**
-             * @todo: log the error to database
+             * Log error to database
              */
+            await AtolClient.databaseLogger.write(
+                DatabaseLogType.CannotCreateAtolCheck,
+                {
+                    error: JSON.stringify(error),
+                },
+            );
             return {
                 status: false,
                 data: error?.response?.data ? error?.response?.data : null,
@@ -287,10 +288,6 @@ export class AtolClient {
                               : 'error getReport',
                 };
             } else {
-                /**
-                 * @todo:
-                 * log the error to database
-                 */
                 return {
                     status: false,
                     data: token.data,
@@ -300,8 +297,14 @@ export class AtolClient {
             }
         } catch (error: any) {
             /**
-             * @todo: log the error to database
+             * Log error to database
              */
+            await AtolClient.databaseLogger.write(
+                DatabaseLogType.CannotGetReportAboutCheck,
+                {
+                    error: JSON.stringify(error),
+                },
+            );
             return {
                 status: false,
                 data: error?.response?.data ? error?.response?.data : null,

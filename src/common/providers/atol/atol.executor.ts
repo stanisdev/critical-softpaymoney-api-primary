@@ -54,7 +54,7 @@ export class AtolExecutor {
         const operationId = {
             sell: 'S-',
             sell_refund: 'SR-',
-            buy: 'B-'
+            buy: 'B-',
         };
         const paymentType = {
             GAZPROM: 'G-',
