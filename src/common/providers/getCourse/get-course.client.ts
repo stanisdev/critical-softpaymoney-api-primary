@@ -55,16 +55,16 @@ export class GetCourseClient {
         product: string,
     ): Promise<GetCourseInitialPaymentResponse> {
         try {
-            const exportID = await this.getToken(url, API, date);
+            const exportId = await this.getToken(url, API, date);
 
-            if (!exportID.status) {
-                return exportID;
+            if (!exportId.status) {
+                return exportId;
             }
             let items = null;
 
             for (let index = 0; index < 12; index++) {
                 const response = await axios.get(
-                    `https://${url}/pl/api/account/exports/${exportID.data}?key=${API}`,
+                    `https://${url}/pl/api/account/exports/${exportId.data}?key=${API}`,
                 );
                 if (response.data.success && response.data.info.items) {
                     items = response.data.info.items;
@@ -156,15 +156,14 @@ export class GetCourseClient {
                 'params',
                 Buffer.from(JSON.stringify(params), 'utf-8').toString('base64'),
             );
-            const config = {
-                headers: {
-                    Accept: 'application/json; q=1.0, */*; Q=0.1',
-                },
-            };
             const response = await axios.post(
                 `https://${url}/pl/api/deals`,
                 data,
-                config,
+                {
+                    headers: {
+                        Accept: 'application/json; q=1.0, */*; Q=0.1',
+                    },
+                },
             );
             return {
                 status: response.data.result.success ? true : false,

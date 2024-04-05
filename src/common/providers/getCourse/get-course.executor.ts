@@ -1,8 +1,15 @@
-import { OrderStatus, PaymentSystem } from 'src/common/enums/general';
+import {
+    DatabaseLogType,
+    OrderStatus,
+    PaymentSystem,
+} from 'src/common/enums/general';
 import { ExternalInteractionDataSource } from 'src/modules/external-interaction/external-interaction.data-source';
 import { GetCourseClient } from './get-course.client';
+import DatabaseLogger from '../logger/database.logger';
 
 export class GetCourseExecutor {
+    private static databaseLogger = DatabaseLogger.getInstance();
+
     constructor(private dataSource: ExternalInteractionDataSource) {}
 
     /**
@@ -12,26 +19,30 @@ export class GetCourseExecutor {
         const { order, product: productDbInstance } = this.dataSource;
 
         if (
-            order &&
+            order instanceof Object &&
             order.status === OrderStatus.Confirmed &&
-            order.payment?.amount &&
+            Number.isInteger(+order.payment?.amount) &&
             order.paidAt &&
-            order.email &&
-            order.payer &&
-            productDbInstance.getcourse.status &&
-            productDbInstance.getcourse.url &&
-            productDbInstance.getcourse.api &&
-            productDbInstance.getcourse.product
+            typeof order.email === 'string' &&
+            typeof order.payer === 'string' &&
+            productDbInstance.getcourse.status === true &&
+            typeof productDbInstance.getcourse.url === 'string' &&
+            typeof productDbInstance.getcourse.api === 'string' &&
+            typeof productDbInstance.getcourse.product === 'string'
         ) {
-            const pastDate = new Date(+new Date(order.paidAt) - 1209600000); // 14 дней назад
+            /**
+             * Create date 14 days ago
+             */
+            const pastDate = new Date(+new Date(order.paidAt) - 1209600000);
             const day = String(pastDate.getDate()).padStart(2, '0');
             const month = String(pastDate.getMonth() + 1).padStart(2, '0');
             const year = String(pastDate.getFullYear());
 
-            const date = `${year}-${month}-${day}`;
-            const getCourseProduct = productDbInstance.getcourse.product;
+            const date = `${year}-${month}-${day}`; // Example: 2023-12-31
+
+            const getCourseProductName = productDbInstance.getcourse.product;
             const { url } = productDbInstance.getcourse;
-            const { api } = productDbInstance.getcourse;
+            const { api: apiKey } = productDbInstance.getcourse;
             const { email, payer } = order;
             const { amount } = order.payment;
 
@@ -46,16 +57,28 @@ export class GetCourseExecutor {
             }
             const getCourseClient = new GetCourseClient();
 
-            await getCourseClient.createNewTransaction(
+            const requestResult = await getCourseClient.createNewTransaction(
                 url, // example: yourlaw.getcourse.ru
-                api, // example: 2cbFUdyTXAk4w5djQfoEMkZim5HLQqgBZYHTYOnItM1DX6MEDCcScx90SUWZoPisZdgaUB4Fw6akcTNEmZHg23ralzW6odz2uwD0Rn6VQ0SqyuzgETD6GggwcwdcPhQ5
+                apiKey, // example: 2cbFUdyTXAk4w5djQfoEMkZim5HLQqgBZYHTYOnItM1DX6MEDCcScx90SUWZoPisZdgaUB4Fw6akcTNEmZHg23ralzW6odz2uwD0Rn6VQ0SqyuzgETD6GggwcwdcPhQ5
                 date,
                 email, // order->email
-                getCourseProduct,
+                getCourseProductName,
                 amount,
-                payer,
+                payer, // payer->payer
                 currency,
             );
+            /**
+             * Log the case if transaction has not been created
+             */
+            if (requestResult?.status !== true) {
+                await GetCourseExecutor.databaseLogger.write(
+                    DatabaseLogType.GetCourseRequestFailed,
+                    {
+                        orderId: order._id,
+                        productId: productDbInstance._id,
+                    },
+                );
+            }
         }
     }
 }

@@ -5,9 +5,9 @@ import {
     InitialPaymentResponseToken,
 } from './atol.interfaces';
 import config from 'src/common/config';
+import DatabaseLogger from '../logger/database.logger';
 import { PaymentInfo, AtolRequestMethod } from './atol.enums';
 import { AtolOperation } from './atol.types';
-import DatabaseLogger from '../logger/database.logger';
 import { DatabaseLogType } from 'src/common/enums/general';
 
 export class AtolClient {

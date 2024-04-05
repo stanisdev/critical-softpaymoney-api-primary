@@ -33,6 +33,7 @@ export enum DatabaseLogType {
     GetCourseGetTokenError = 'get-course-get-token-error',
     GetCourseGetOldTransactionNumberError = 'get-course-get-old-transaction-number-error',
     GetCourseCreateNewTransactionError = 'get-course-create-new-transaction-error',
+    GetCourseRequestFailed = 'get-course-request-failed',
     ExternalInteractionRequestFailed = 'external-interaction-request-failed',
     CannotGetAtolAuthToken = 'cannot-get-atol-auth-token',
     CannotCreateAtolCheck = 'cannot-create-atol-check',
