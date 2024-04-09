@@ -13,12 +13,17 @@ import {
 } from '@nestjs/common';
 import { FastifyReply } from 'fastify';
 import { PaymentSystemValidationPipe } from 'src/common/pipes/payment-system-validation.pipe';
+import { HandlerDestinationValidationPipe } from 'src/common/pipes/handler-destination-validation.pipe';
 import { PrimaryService } from './primary.service';
 import { Dictionary } from 'src/common/types/general';
-import { IncomingRequestStatus, PaymentSystem } from 'src/common/enums/general';
+import {
+    HandlerDestination,
+    IncomingRequestStatus,
+    PaymentSystem,
+} from 'src/common/enums/general';
 
-@UsePipes(PaymentSystemValidationPipe)
-@Controller('/primary/:paymentSystem')
+@UsePipes(PaymentSystemValidationPipe, HandlerDestinationValidationPipe)
+@Controller('/primary/:paymentSystem/:handlerDestination')
 export class PrimaryController {
     constructor(private readonly primaryService: PrimaryService) {}
 
@@ -30,11 +35,13 @@ export class PrimaryController {
     async indexGet(
         @Query() query: Dictionary,
         @Param('paymentSystem') paymentSystem: PaymentSystem,
+        @Param('handlerDestination') handlerDestination: HandlerDestination,
         @Response() reply: FastifyReply,
     ): Promise<void> {
         const processingResult = await this.primaryService.processRequest(
             query,
             paymentSystem,
+            handlerDestination,
         );
 
         if (processingResult === IncomingRequestStatus.Processed) {
@@ -58,11 +65,13 @@ export class PrimaryController {
     async indexPost(
         @Body() body: Dictionary,
         @Param('paymentSystem') paymentSystem: PaymentSystem,
+        @Param('destination') handlerDestination: HandlerDestination,
         @Response() reply: FastifyReply,
     ): Promise<void> {
         const processingResult = await this.primaryService.processRequest(
             body,
             paymentSystem,
+            handlerDestination,
         );
         if (processingResult === IncomingRequestStatus.Processed) {
             const responseParams =

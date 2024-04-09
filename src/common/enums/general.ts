@@ -75,3 +75,13 @@ export enum PaymentReceiptStatus {
     SellRefund = 'sell_refund', // возврат
     Buy = 'buy', // расход
 }
+
+export enum HandlerDestination {
+    Preparation = 'PREPARATION',
+    Completion = 'COMPLETION',
+}
+
+export enum GazpromPaymentStatus {
+    New = 'new',
+    Auto = 'auto',
+}

@@ -6,6 +6,7 @@ import {
 } from 'src/database/repositories';
 import {
     DatabaseLogType,
+    HandlerDestination,
     IncomingRequestStatus,
     PaymentSystem,
 } from 'src/common/enums/general';
@@ -26,6 +27,7 @@ export class PrimaryHelper {
     constructor(
         private requestPayload: string,
         private paymentSystem: PaymentSystem,
+        private handlerDestination: HandlerDestination,
     ) {}
 
     /**
@@ -33,6 +35,7 @@ export class PrimaryHelper {
      */
     async isDoubleRequest(inputData: Dictionary): Promise<boolean> {
         if (this.paymentSystem === PaymentSystem.Gazprom) {
+            const { handlerDestination } = this;
             let orderPaymentId = <string>inputData['o.CustomerKey'];
 
             try {
@@ -46,6 +49,9 @@ export class PrimaryHelper {
                 .createQueryBuilder('ir')
                 .select(['ir.id'])
                 .where(`ir.payload @> '{"o.CustomerKey":"${orderPaymentId}"}'`)
+                .andWhere('ir.handlerDestination = :handlerDestination', {
+                    handlerDestination,
+                })
                 .getOne();
 
             return foundResult instanceof IncomingRequestEntity;
@@ -120,11 +126,12 @@ export class PrimaryHelper {
     private async saveIncomingRequestInPostgres(): Promise<void> {
         const [result] = await typeOrmDataSource.query(`
             INSERT INTO "IncomingRequests"
-                ("payload", "status", "paymentSystem", "createdAt", "updatedAt")
+                ("payload", "status", "paymentSystem", "handlerDestination", "createdAt", "updatedAt")
             VALUES (
                 '${this.requestPayload}',
                 'RECEIVED',
                 'GAZPROM',
+                '${this.handlerDestination}',
                 DEFAULT,
                 DEFAULT
             ) RETURNING "id"

@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import { IncomingRequestEntity } from 'src/database/entities/incomingRequest.entity';
 import { MongoClient } from '../../mongoClient';
-import { GazpromHelper } from './gazprom.helper';
+import { GazpromCompletionHelper } from './gazprom-completion.helper';
 import {
     ContentType,
     DatabaseLogType,
@@ -25,21 +25,21 @@ import DatabaseLogger from '../../logger/database.logger';
 import config from 'src/common/config';
 
 /**
- * Class to handle Gazprom bank webhooks
+ * Class to handle Gazprom bank completion webhook
  */
-export class GazpromWebhook {
+export class GazpromCompletionWebhook {
     private static regularLogger = RegularLogger.getInstance();
     private static databaseLogger = DatabaseLogger.getInstance();
     private static certificates = {
         signatureVerification: '',
     };
     private mongoClient = MongoClient.getInstance().database;
-    private helper: GazpromHelper;
+    private helper: GazpromCompletionHelper;
     private dataSource: GazpromDataSource;
     private executionResult: GazpromExecutionResult;
 
     constructor(private readonly incomingRequest: IncomingRequestEntity) {
-        this.helper = new GazpromHelper(incomingRequest);
+        this.helper = new GazpromCompletionHelper(incomingRequest);
         this.dataSource = new GazpromDataSource(incomingRequest);
     }
 
@@ -47,6 +47,7 @@ export class GazpromWebhook {
      * Start processing the incoming request
      */
     async execute(): Promise<void> {
+        // @todo: here an error
         const payload = this.helper.parseIncomingRequest();
         const incomingRequestId = this.incomingRequest.id;
 
@@ -68,7 +69,7 @@ export class GazpromWebhook {
             isSignatureCorrect = this.helper.isSignatureCorrect(
                 signature,
                 url,
-                GazpromWebhook.certificates.signatureVerification,
+                GazpromCompletionWebhook.certificates.signatureVerification,
             );
         } catch {
             /**
@@ -89,7 +90,7 @@ export class GazpromWebhook {
                 .where('id = :id', { id: this.incomingRequest.id })
                 .execute();
 
-            await GazpromWebhook.databaseLogger.write(
+            await GazpromCompletionWebhook.databaseLogger.write(
                 DatabaseLogType.GazpromSignatureIsIncorrect,
                 {
                     incomingRequestId,
@@ -229,7 +230,7 @@ export class GazpromWebhook {
                 type: Сurrency.Rub,
             });
         if (!(productOwnerBalance instanceof Object)) {
-            await GazpromWebhook.databaseLogger.write(
+            await GazpromCompletionWebhook.databaseLogger.write(
                 DatabaseLogType.ProductOwnerBalanceInMongoNotFound,
                 {
                     incomingRequestId,

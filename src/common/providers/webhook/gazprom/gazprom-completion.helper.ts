@@ -20,7 +20,7 @@ import { balanceRepository } from 'src/database/repositories';
 import { BalanceEntity } from 'src/database/entities/balance.entity';
 import { BalanceUpdateQueueEntity } from 'src/database/entities/balanceUpdateQueue.entity';
 
-export class GazpromHelper {
+export class GazpromCompletionHelper {
     private static databaseLogger = DatabaseLogger.getInstance();
     private mongoClient = MongoClient.getInstance().database;
 
@@ -276,7 +276,7 @@ export class GazpromHelper {
             !(order.payment instanceof Object) ||
             Object.keys(order.payment).length < 2
         ) {
-            await GazpromHelper.databaseLogger.write(
+            await GazpromCompletionHelper.databaseLogger.write(
                 DatabaseLogType.MongoOrderHasNoPaymentObject,
                 {
                     incomingRequestId: this.incomingRequest.id,
@@ -300,7 +300,7 @@ export class GazpromHelper {
         const inputAmount = Number.parseFloat(payloadAmount);
 
         if (Number.isNaN(inputAmount)) {
-            await GazpromHelper.databaseLogger.write(
+            await GazpromCompletionHelper.databaseLogger.write(
                 DatabaseLogType.IncomingRequestAmountIsIncorrect,
                 {
                     incomingRequestId,

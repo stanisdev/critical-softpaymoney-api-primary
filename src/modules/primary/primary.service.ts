@@ -3,6 +3,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import {
     ContentType,
     DatabaseLogType,
+    HandlerDestination,
     IncomingRequestStatus,
     PaymentSystem,
 } from 'src/common/enums/general';
@@ -21,10 +22,15 @@ export class PrimaryService {
     async processRequest(
         inputData: Dictionary,
         paymentSystem: PaymentSystem,
+        handlerDestination: HandlerDestination,
     ): Promise<IncomingRequestStatus> {
         const requestPayload = JSON.stringify(inputData);
 
-        const helper = new PrimaryHelper(requestPayload, paymentSystem);
+        const helper = new PrimaryHelper(
+            requestPayload,
+            paymentSystem,
+            handlerDestination,
+        );
         if (await helper.isDoubleRequest(inputData)) {
             /**
              * If the server received a webhook duplicate

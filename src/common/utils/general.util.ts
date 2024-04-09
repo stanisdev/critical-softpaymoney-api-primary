@@ -1,7 +1,7 @@
 import * as detectPort from 'detect-port';
 import { createHash } from 'node:crypto';
 import { ContentType, PaymentSystem } from '../enums/general';
-import { GazpromWebhook } from '../providers/webhook/gazprom/gazprom.webhook';
+import { GazpromCompletionWebhook } from '../providers/webhook/gazprom/gazprom-completion.webhook';
 
 export class GeneralUtil {
     static async isPortInUse(portToCheck: number): Promise<boolean> {
@@ -11,7 +11,7 @@ export class GeneralUtil {
 
     static getPaymentSystemResponse(paymentSystem: PaymentSystem) {
         if (paymentSystem === PaymentSystem.Gazprom) {
-            return GazpromWebhook.getSuccessfulResponse();
+            return GazpromCompletionWebhook.getSuccessfulResponse();
         } else {
             return {
                 payload: {

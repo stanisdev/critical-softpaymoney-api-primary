@@ -10,7 +10,7 @@ import config from './common/config';
 import { LogLevel, LoggerService, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './modules/app.module';
 import { typeOrmDataSource } from 'src/database/data-source';
-import { GazpromWebhook } from './common/providers/webhook/gazprom/gazprom.webhook';
+import { GazpromCompletionWebhook } from './common/providers/webhook/gazprom/gazprom-completion.webhook';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { GeneralUtil } from './common/utils/general.util';
 import { MongoClient } from './common/providers/mongoClient';
@@ -44,7 +44,7 @@ export class ServerBootstrap {
         await this.connectPostgres();
         await this.connectMongo();
 
-        GazpromWebhook.loadCertificates();
+        GazpromCompletionWebhook.loadCertificates();
 
         /**
          * Build application instance

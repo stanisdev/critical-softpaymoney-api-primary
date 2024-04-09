@@ -1,10 +1,16 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import {
+    BadRequestException,
+    HttpStatus,
+    Injectable,
+    InternalServerErrorException,
+} from '@nestjs/common';
 import { HttpClient } from 'src/common/providers/httpClient';
 import { Dictionary } from 'src/common/types/general';
 import DatabaseLogger from 'src/common/providers/logger/database.logger';
 import config from 'src/common/config';
 import HTTPMethod from 'http-method-enum';
 import { DatabaseLogType } from 'src/common/enums/general';
+import { IncomingRequestEntity } from 'src/database/entities/incomingRequest.entity';
 
 @Injectable()
 export class HandlerHelper {
@@ -40,5 +46,42 @@ export class HandlerHelper {
                 },
             );
         }
+    }
+
+    /**
+     * Log the error if unknown payment system has been passed
+     */
+    async claimUnknownPaymentSystem(
+        incomingRequest: IncomingRequestEntity,
+    ): Promise<void> {
+        const logPayload = {
+            id: incomingRequest.id,
+            paymentSystem: incomingRequest.paymentSystem,
+        };
+        await HandlerHelper.databaseLogger.write(
+            DatabaseLogType.UnknownPaymentSystem,
+            logPayload,
+        );
+        throw new InternalServerErrorException(
+            `Unknown payment system '${incomingRequest.paymentSystem}'`,
+        );
+    }
+
+    /**
+     * Incoming request not found; log the error
+     */
+    async claimIncomingRequestNotFound(
+        incomingRequestId: number,
+    ): Promise<void> {
+        const logPayload = {
+            id: incomingRequestId,
+        };
+        await HandlerHelper.databaseLogger.write(
+            DatabaseLogType.IncomingRequestNotFound,
+            logPayload,
+        );
+        throw new BadRequestException(
+            `Incoming request id='${incomingRequestId}' is not found`,
+        );
     }
 }

@@ -12,6 +12,7 @@ export class IncomingRequests1710139953829 implements MigrationInterface {
                 payload jsonb NOT NULL,
                 status IncomingRequestStatus NOT NULL,
                 "paymentSystem" VARCHAR NOT NULL, -- Payment system name
+                "handlerDestination" VARCHAR NOT NULL, -- Related to a endpoint of the handler controller
                 "createdAt" TIMESTAMP DEFAULT current_timestamp,
                 "updatedAt" TIMESTAMP
             );

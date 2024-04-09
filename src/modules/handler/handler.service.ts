@@ -6,13 +6,15 @@ import {
 import DatabaseLogger from 'src/common/providers/logger/database.logger';
 import {
     DatabaseLogType,
+    HandlerDestination,
     IncomingRequestStatus,
     PaymentSystem,
 } from 'src/common/enums/general';
-import { GazpromWebhook } from 'src/common/providers/webhook/gazprom/gazprom.webhook';
+import { GazpromCompletionWebhook } from 'src/common/providers/webhook/gazprom/gazprom-completion.webhook';
 import { IncomingRequestEntity } from 'src/database/entities/incomingRequest.entity';
 import { incomingRequestRepository } from 'src/database/repositories';
 import { HandlerHelper } from './handler.helper';
+import { GazpromPreparationWebhook } from 'src/common/providers/webhook/gazprom/gazprom-preparation.webhook';
 
 @Injectable()
 export class HandlerService {
@@ -31,17 +33,9 @@ export class HandlerService {
             .getOne();
 
         if (!(incomingRequest instanceof IncomingRequestEntity)) {
-            const logPayload = {
-                id: incomingRequestId,
-            };
-            await this.databaseLogger.write(
-                DatabaseLogType.IncomingRequestNotFound,
-                logPayload,
-            );
-            throw new BadRequestException(
-                `Incoming request id='${incomingRequestId}' is not found`,
-            );
+            this.helper.claimIncomingRequestNotFound(incomingRequestId);
         }
+
         /**
          * @todo
          * @important
@@ -77,56 +71,71 @@ export class HandlerService {
         }
 
         if (incomingRequest.paymentSystem === PaymentSystem.Gazprom) {
-            const gazpromWebhook = new GazpromWebhook(incomingRequest);
-            await gazpromWebhook.execute();
-            const executionResult = gazpromWebhook.getExecutionResult();
+            const { handlerDestination } = incomingRequest;
 
-            if (
-                executionResult instanceof Object &&
-                executionResult.value.orderProcessed === true
-            ) {
-                /**
-                 * Send order info to external interaction server
-                 */
-                const payload = {
-                    orderId: executionResult.value.orderInstance._id,
-                    productOwnerId:
-                        executionResult.value.productOwnerInstance._id,
-                    finalAmount: executionResult.value.finalAmount,
-                    untouchedAmount: executionResult.value.untouchedAmount,
-                };
-                const externalInteractionData = {
-                    paymentSystem: PaymentSystem.Gazprom,
-                    payload: JSON.stringify(payload),
-                };
+            /**
+             * Completion handler destination
+             */
+            if (handlerDestination === HandlerDestination.Completion) {
+                const completionWebhook = new GazpromCompletionWebhook(
+                    incomingRequest,
+                );
+                await completionWebhook.execute();
+                const executionResult = completionWebhook.getExecutionResult();
 
-                try {
+                if (
+                    executionResult instanceof Object &&
+                    executionResult.value.orderProcessed === true
+                ) {
                     /**
-                     * @note It's not necessary to await the response
+                     * Send order info to external interaction server
                      */
-                    this.helper.sendDataToExternalInteractionServer(
-                        externalInteractionData,
-                    );
-                } catch (error) {
-                    /**
-                     * @todo: log the case if an error was thrown
-                     */
+                    const payload = {
+                        orderId: executionResult.value.orderInstance._id,
+                        productOwnerId:
+                            executionResult.value.productOwnerInstance._id,
+                        finalAmount: executionResult.value.finalAmount,
+                        untouchedAmount: executionResult.value.untouchedAmount,
+                    };
+                    const externalInteractionData = {
+                        paymentSystem: PaymentSystem.Gazprom,
+                        payload: JSON.stringify(payload),
+                    };
+
+                    try {
+                        /**
+                         * @note It's not necessary to await the response
+                         */
+                        this.helper.sendDataToExternalInteractionServer(
+                            externalInteractionData,
+                        );
+                    } catch (error) {
+                        /**
+                         * @todo: log the case if an error was thrown
+                         */
+                    }
                 }
+            } else if (handlerDestination === HandlerDestination.Preparation) {
+            /**
+             * Preparation handler destination
+             */
+                const preparationWebhook = new GazpromPreparationWebhook(
+                    incomingRequest,
+                );
+                await preparationWebhook.execute();
+            } else {
+            /**
+             * Wrong handler destination
+             */
+                throw new InternalServerErrorException(
+                    'Unknown handler destination',
+                );
             }
             return;
         }
-
-        const logPayload = {
-            id: incomingRequestId,
-            paymentSystem: incomingRequest.paymentSystem,
-        };
-        await this.databaseLogger.write(
-            DatabaseLogType.UnknownPaymentSystem,
-            logPayload,
-        );
-
-        throw new InternalServerErrorException(
-            `Unknown payment system '${incomingRequest.paymentSystem}'`,
-        );
+        /**
+         * Log the error if unknown payment system has been passed
+         */
+        await this.helper.claimUnknownPaymentSystem(incomingRequest);
     }
 }
