@@ -2,7 +2,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { Module, OnModuleDestroy } from '@nestjs/common';
 import { PrimaryModule } from './primary/primary.module';
 import { typeOrmDataSource } from 'src/database/data-source';
-import { MongoClient } from 'src/common/providers/mongoClient';
 import { ServerBootstrap } from 'src/serverBootstrap';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import RegularLogger from 'src/common/providers/logger/regular.logger';
@@ -34,7 +33,6 @@ export class AppModule implements OnModuleDestroy {
     async onModuleDestroy() {
         await ServerBootstrap.getInstance().destroy();
         await typeOrmDataSource.destroy();
-        await MongoClient.getInstance().closeConnection();
         this.regularLogger.log('All connections closed');
     }
 }

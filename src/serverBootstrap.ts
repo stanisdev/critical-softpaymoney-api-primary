@@ -11,7 +11,6 @@ import { LogLevel, LoggerService, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './modules/app.module';
 import { typeOrmDataSource } from 'src/database/data-source';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
-import { MongoClient } from './common/providers/mongoClient';
 import { handlerPortRepository } from './database/repositories';
 
 export class ServerBootstrap {
@@ -37,7 +36,6 @@ export class ServerBootstrap {
      */
     async start() {
         await this.connectPostgres();
-        await this.connectMongo();
 
         /**
          * Build application instance
@@ -103,22 +101,6 @@ export class ServerBootstrap {
             process.exit(1);
         }
         this.regularLogger.log('Postgres connected');
-    }
-
-    /**
-     * Establish Mongo connection
-     */
-    private async connectMongo(): Promise<void> {
-        try {
-            await MongoClient.getInstance().connect();
-        } catch (mongoConnectionError) {
-            this.regularLogger.error(
-                mongoConnectionError,
-                'Cannot connect to Mongo',
-            );
-            process.exit(1);
-        }
-        this.regularLogger.log('Mongo connected');
     }
 
     /**
