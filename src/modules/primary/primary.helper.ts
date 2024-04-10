@@ -154,7 +154,7 @@ export class PrimaryHelper {
             this.handlerPorts = handlerPorts.map((port) => port.value);
         } else {
             /**
-             * If there are no any records in DB
+             * If there is no any record in DB
              * @notice this situation can appear very rarely
              */
             const ports: number[] = [];

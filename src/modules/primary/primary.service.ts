@@ -1,21 +1,16 @@
 import * as xml from 'xml';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
     ContentType,
-    DatabaseLogType,
     HandlerDestination,
     IncomingRequestStatus,
     PaymentSystem,
 } from 'src/common/enums/general';
 import { PrimaryHelper } from './primary.helper';
-import { GeneralUtil } from 'src/common/utils/general.util';
 import { Dictionary } from 'src/common/types/general';
-import DatabaseLogger from 'src/common/providers/logger/database.logger';
 
 @Injectable()
 export class PrimaryService {
-    private databaseLogger = DatabaseLogger.getInstance();
-
     /**
      * Process incoming request
      */
@@ -58,8 +53,10 @@ export class PrimaryService {
      * @todo: define return type
      */
     getResponseParamsByPaymentSystem(paymentSystem: PaymentSystem) {
-        const responseParams =
-            GeneralUtil.getPaymentSystemResponse(paymentSystem);
+        const responseParams = {
+            contentType: '', // @todo: Fix this
+            payload: { success: true },
+        };
         let payload;
 
         if (responseParams.contentType === ContentType.Xml) {

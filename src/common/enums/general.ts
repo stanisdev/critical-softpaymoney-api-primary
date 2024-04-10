@@ -64,12 +64,6 @@ export enum BalanceUpdateOperation {
     Decrement = 'DECREMENT',
 }
 
-export enum ServerType {
-    Primary = 'PRIMARY',
-    ExternalInteraction = 'EXTERNAL_INTERACTION',
-    Handler = 'HANDLER',
-}
-
 export enum PaymentReceiptStatus {
     Sell = 'sell', // приход
     SellRefund = 'sell_refund', // возврат
