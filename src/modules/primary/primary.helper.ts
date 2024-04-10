@@ -1,5 +1,5 @@
 import HttpMethod from 'http-method-enum';
-import { HttpStatus } from '@nestjs/common';
+import { BadRequestException, HttpStatus } from '@nestjs/common';
 import {
     handlerPortRepository,
     incomingRequestRepository,
@@ -193,5 +193,18 @@ export class PrimaryHelper {
             })
             .where('id = :id', { id: this.incomingRequestInstance.id })
             .execute();
+    }
+
+    /**
+     * If the server received a webhook duplicate
+     */
+    async claimDoubleRequest(inputData: Dictionary): Promise<void> {
+        await this.databaseLogger.write(
+            DatabaseLogType.DuplicateIncomingRequest,
+            inputData,
+        );
+        throw new BadRequestException(
+            'Order with such ID has been already sent',
+        );
     }
 }

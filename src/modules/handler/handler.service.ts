@@ -70,6 +70,9 @@ export class HandlerService {
             );
         }
 
+        /**
+         * If payment system is Gazprom
+         */
         if (incomingRequest.paymentSystem === PaymentSystem.Gazprom) {
             const { handlerDestination } = incomingRequest;
 
@@ -116,17 +119,17 @@ export class HandlerService {
                     }
                 }
             } else if (handlerDestination === HandlerDestination.Preparation) {
-            /**
-             * Preparation handler destination
-             */
+                /**
+                 * Preparation handler destination
+                 */
                 const preparationWebhook = new GazpromPreparationWebhook(
                     incomingRequest,
                 );
                 await preparationWebhook.execute();
             } else {
-            /**
-             * Wrong handler destination
-             */
+                /**
+                 * Wrong handler destination
+                 */
                 throw new InternalServerErrorException(
                     'Unknown handler destination',
                 );

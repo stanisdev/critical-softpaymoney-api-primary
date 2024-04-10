@@ -41,8 +41,8 @@ export class GazpromPreparationWebhook {
                 desc: 'Payment accepted',
                 longDesc: `Оплата продукта: "${order.product.name}"`, // @todo: fix this
                 amount: Number(order.payment.amount),
-                currency: 643,
-                exponent: 2,
+                currency: 643, // Трехзначный цифровой код валюты (ISO 4217)
+                exponent: 2, // Экспонента валюты платежа (ISO 4217)
                 trxId: 'oldTrx ??????', // @todo: fix this also
             };
         } else {

@@ -26,35 +26,27 @@ export class PrimaryService {
     ): Promise<IncomingRequestStatus> {
         const requestPayload = JSON.stringify(inputData);
 
-        const helper = new PrimaryHelper(
+        const primaryHelper = new PrimaryHelper(
             requestPayload,
             paymentSystem,
             handlerDestination,
         );
-        if (await helper.isDoubleRequest(inputData)) {
-            /**
-             * If the server received a webhook duplicate
-             */
-            await this.databaseLogger.write(
-                DatabaseLogType.DuplicateIncomingRequest,
-                inputData,
-            );
-            throw new BadRequestException(
-                'Order with such ID has been already sent',
-            );
+        if (await primaryHelper.isDoubleRequest(inputData)) {
+            // await primaryHelper.claimDoubleRequest(inputData); @TODO: UNCOMMENT THIS
         }
-        await helper.execute();
+
+        await primaryHelper.execute();
 
         let processingResult: IncomingRequestStatus;
 
         /**
          * Check whether incoming request has been processed
          */
-        if (helper.isIncomingRequestProcessed) {
+        if (primaryHelper.isIncomingRequestProcessed) {
             processingResult = IncomingRequestStatus.Processed;
         } else {
             processingResult = IncomingRequestStatus.Failed;
-            await helper.updateIncomingRequestStatus(processingResult);
+            await primaryHelper.updateIncomingRequestStatus(processingResult);
         }
 
         return processingResult;
