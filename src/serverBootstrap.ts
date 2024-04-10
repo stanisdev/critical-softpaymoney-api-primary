@@ -11,13 +11,11 @@ import { LogLevel, LoggerService, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './modules/app.module';
 import { typeOrmDataSource } from 'src/database/data-source';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
-import { handlerPortRepository } from './database/repositories';
 
 export class ServerBootstrap {
     private static instance: ServerBootstrap | null = null;
     private regularLogger = RegularLogger.getInstance();
     private app: NestFastifyApplication;
-    private port: number;
 
     private constructor() {}
 
@@ -48,28 +46,21 @@ export class ServerBootstrap {
                 logger: this.getNestLoggerOptions(),
             },
         );
-
         await this.applicationSetup();
-        await this.defineServerTypeAndPort();
         await this.listen();
 
         this.serverShutdownHook();
     }
 
     /**
-     * Define server type and port
-     */
-    private async defineServerTypeAndPort(): Promise<void> {
-        this.port = config.server.port.primary;
-    }
-
-    /**
      * Start listening
      */
     private async listen() {
-        await this.app.listen(this.port);
+        const port = config.server.port.primary;
+
+        await this.app.listen(port);
         this.regularLogger.log(
-            `Server started at port ${this.port} as 'PRIMARY'`,
+            `Server started at port ${port} as 'PRIMARY'`,
         );
     }
 
@@ -110,17 +101,6 @@ export class ServerBootstrap {
         return config.environment.isProd()
             ? this.regularLogger
             : ['warn', 'error', 'verbose'];
-    }
-
-    /**
-     * Method to be executed when the server stopped
-     */
-    async destroy(): Promise<void> {
-        await handlerPortRepository
-            .createQueryBuilder()
-            .delete()
-            .where('value = :port', { port: this.port })
-            .execute();
     }
 
     /**
