@@ -44,7 +44,6 @@ export class HttpClient {
             if (isEmpty(errorMessage)) {
                 errorMessage = 'Cannot spot the cause of failed http request';
             }
-
             const statusCode = requestFailed.response?.status;
 
             return {
@@ -53,13 +52,16 @@ export class HttpClient {
                 statusCode,
             };
         }
+        /**
+         * Define successful result
+         */
         const requestResult = {
             ok: true,
             data: {},
             statusCode: response?.status,
         };
-        if (response?.data instanceof Object) {
-            requestResult.data = response.data;
+        if (response?.data?.data instanceof Object) {
+            requestResult.data = response.data.data;
         }
         return requestResult;
     }

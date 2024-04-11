@@ -7,7 +7,10 @@ import {
     PaymentSystem,
 } from 'src/common/enums/general';
 import { PrimaryHelper } from './primary.helper';
-import { Dictionary } from 'src/common/types/general';
+import {
+    Dictionary,
+    PrimaryProcessingRequestResult,
+} from 'src/common/types/general';
 
 @Injectable()
 export class PrimaryService {
@@ -18,7 +21,7 @@ export class PrimaryService {
         inputData: Dictionary,
         paymentSystem: PaymentSystem,
         handlerDestination: HandlerDestination,
-    ): Promise<IncomingRequestStatus> {
+    ): Promise<PrimaryProcessingRequestResult> {
         const requestPayload = JSON.stringify(inputData);
 
         const primaryHelper = new PrimaryHelper(
@@ -27,45 +30,57 @@ export class PrimaryService {
             handlerDestination,
         );
         if (await primaryHelper.isDoubleRequest(inputData)) {
-            // await primaryHelper.claimDoubleRequest(inputData); @TODO: UNCOMMENT THIS
+            /**
+             * @notice
+             * @important
+             * @todo: UNCOMMENT LINE BELOW
+             */
+            // await primaryHelper.claimDoubleRequest(inputData);
         }
 
         await primaryHelper.execute();
 
-        let processingResult: IncomingRequestStatus;
-
         /**
          * Check whether incoming request has been processed
          */
-        if (primaryHelper.isIncomingRequestProcessed) {
-            processingResult = IncomingRequestStatus.Processed;
-        } else {
-            processingResult = IncomingRequestStatus.Failed;
-            await primaryHelper.updateIncomingRequestStatus(processingResult);
-        }
+        if (primaryHelper.isIncomingRequestProcessed()) {
+            /**
+             * Successful result looks something like this:
+              {
+                  payload: [ { 'payment-avail-response': [Array] } ],
+                  contentType: 'text/xml'
+              }
+             */
+            const requestResultData = primaryHelper.getRequestResultData();
 
-        return processingResult;
+            return {
+                incomingRequestStatus: IncomingRequestStatus.Processed,
+                requestResultData,
+            };
+        } else {
+            await primaryHelper.updateIncomingRequestStatus(
+                IncomingRequestStatus.Failed,
+            );
+            return {
+                incomingRequestStatus: IncomingRequestStatus.Failed,
+                requestResultData: null,
+            };
+        }
     }
 
     /**
-     * Get response params by payment system
-     *
-     * @todo: define return type
+     * Compile reply parameters (Content type & Payload)
      */
-    getResponseParamsByPaymentSystem(paymentSystem: PaymentSystem) {
-        const responseParams = {
-            contentType: '', // @todo: Fix this
-            payload: { success: true },
-        };
+    compileReplyParams(requestResultData: Dictionary) {
         let payload;
 
-        if (responseParams.contentType === ContentType.Xml) {
-            payload = xml(responseParams.payload, true);
+        if (requestResultData.contentType === ContentType.Xml) {
+            payload = xml(<string>requestResultData.payload, true);
         } else {
-            payload = responseParams.payload;
+            payload = requestResultData.payload;
         }
         return {
-            contentType: responseParams.contentType,
+            contentType: requestResultData.contentType,
             payload,
         };
     }

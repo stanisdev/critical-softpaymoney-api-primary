@@ -1,4 +1,5 @@
 import { Document, ObjectId, WithId } from 'mongodb';
+import { IncomingRequestStatus } from '../enums/general';
 
 export type Dictionary = {
     [key: string]: string | number | Date | boolean | ObjectId | Dictionary;
@@ -34,4 +35,9 @@ export type ExternalInteractionPayload = {
     productOwnerId: string;
     finalAmount: number;
     untouchedAmount: number;
+};
+
+export type PrimaryProcessingRequestResult = {
+    incomingRequestStatus: IncomingRequestStatus;
+    requestResultData: Dictionary | null;
 };

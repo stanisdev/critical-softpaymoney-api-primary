@@ -43,15 +43,15 @@ export class PrimaryController {
             paymentSystem,
             handlerDestination,
         );
-
-        if (processingResult === IncomingRequestStatus.Processed) {
-            const responseParams =
-                this.primaryService.getResponseParamsByPaymentSystem(
-                    paymentSystem,
-                );
-
-            reply.header('Content-Type', responseParams.contentType);
-            reply.send(responseParams.payload);
+        if (
+            processingResult.incomingRequestStatus ===
+            IncomingRequestStatus.Processed
+        ) {
+            const replyParams = this.primaryService.compileReplyParams(
+                processingResult.requestResultData,
+            );
+            reply.header('Content-Type', replyParams.contentType);
+            reply.send(replyParams.payload);
         } else {
             throw new InternalServerErrorException('Incoming request failed');
         }
@@ -73,14 +73,15 @@ export class PrimaryController {
             paymentSystem,
             handlerDestination,
         );
-        if (processingResult === IncomingRequestStatus.Processed) {
-            const responseParams =
-                this.primaryService.getResponseParamsByPaymentSystem(
-                    paymentSystem,
-                );
-
-            reply.header('Content-Type', responseParams.contentType);
-            reply.send(responseParams.payload);
+        if (
+            processingResult.incomingRequestStatus ===
+            IncomingRequestStatus.Processed
+        ) {
+            const replyParams = this.primaryService.compileReplyParams(
+                processingResult.requestResultData,
+            );
+            reply.header('Content-Type', replyParams.contentType);
+            reply.send(replyParams.payload);
         } else {
             throw new InternalServerErrorException('Incoming request failed');
         }

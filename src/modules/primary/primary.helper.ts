@@ -21,8 +21,8 @@ export class PrimaryHelper {
     private incomingRequestInstance: IncomingRequestEntity;
     private databaseLogger = DatabaseLogger.getInstance();
     private handlerPorts: number[];
-
-    isIncomingRequestProcessed: boolean;
+    private requestResultData: Dictionary;
+    private _isIncomingRequestProcessed = false;
 
     constructor(
         private requestPayload: string,
@@ -99,7 +99,15 @@ export class PrimaryHelper {
                     await this.getIncomingRequestStatus();
 
                 if (incomingRequestStatus === IncomingRequestStatus.Processed) {
-                    this.isIncomingRequestProcessed = true;
+                    this._isIncomingRequestProcessed = true;
+                    /**
+                     * Final data looks something like this:
+                     * {
+                     *    payload: [ { 'payment-avail-response': [Array] } ],
+                     *    contentType: 'text/xml'
+                     * }
+                     */
+                    this.requestResultData = requestResult.data;
                     return;
                 }
             } else {
@@ -117,7 +125,10 @@ export class PrimaryHelper {
                 );
             }
         }
-        this.isIncomingRequestProcessed = false;
+        /**
+         * If this part of code is reached then
+         * 'this._isIncomingRequestProcessed' still = false
+         */
     }
 
     /**
@@ -206,5 +217,19 @@ export class PrimaryHelper {
         throw new BadRequestException(
             'Order with such ID has been already sent',
         );
+    }
+
+    /**
+     * Has incoming request been processed ?
+     */
+    isIncomingRequestProcessed(): boolean {
+        return this._isIncomingRequestProcessed;
+    }
+
+    /**
+     * Get request result data
+     */
+    getRequestResultData(): Dictionary {
+        return this.requestResultData;
     }
 }

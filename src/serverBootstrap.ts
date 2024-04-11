@@ -59,9 +59,7 @@ export class ServerBootstrap {
         const port = config.server.port.primary;
 
         await this.app.listen(port);
-        this.regularLogger.log(
-            `Server started at port ${port} as 'PRIMARY'`,
-        );
+        this.regularLogger.log(`Server started at port ${port} as 'PRIMARY'`);
     }
 
     /**
