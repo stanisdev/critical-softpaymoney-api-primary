@@ -15,7 +15,7 @@ export const typeOrmDataSource = new DataSource({
     username: config.db.postgres.user,
     password: config.db.postgres.password,
     database: config.db.postgres.name,
-    logging: true,
+    logging: isLoggingOn(),
     synchronize: false,
     name: 'default',
     entities: [
@@ -29,3 +29,10 @@ export const typeOrmDataSource = new DataSource({
     ],
     migrations: [],
 });
+
+function isLoggingOn(): boolean {
+    if (process.env.DB_LOGGING_ON) {
+        return true;
+    }
+    return !config.environment.isTest();
+}

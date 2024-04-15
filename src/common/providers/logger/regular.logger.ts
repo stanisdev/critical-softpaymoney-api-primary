@@ -1,7 +1,10 @@
 import { LoggerService } from '@nestjs/common';
 import { pino as getPino } from 'pino';
+import config from 'src/common/config';
 
-const pino = getPino({});
+const pino = getPino({
+    enabled: !config.environment.isTest(),
+});
 
 export default class RegularLogger implements LoggerService {
     private static instance: RegularLogger | null = null;

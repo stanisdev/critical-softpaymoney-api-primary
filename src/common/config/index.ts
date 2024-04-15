@@ -62,6 +62,9 @@ export default {
         isProd(): boolean {
             return Boolean(nodeEnv?.includes('production'));
         },
+        isTest(): boolean {
+            return Boolean(nodeEnv?.includes('test'));
+        },
     },
     timeout: {
         handler: +env.HANDLER_SERVER_RESPONSE_TIMEOUT,
