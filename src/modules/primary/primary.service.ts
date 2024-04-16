@@ -30,12 +30,7 @@ export class PrimaryService {
             handlerDestination,
         );
         if (await primaryHelper.isDoubleRequest(inputData)) {
-            /**
-             * @notice
-             * @important
-             * @todo: UNCOMMENT LINE BELOW
-             */
-            // await primaryHelper.claimDoubleRequest(inputData);
+            await primaryHelper.claimDoubleRequest(inputData);
         }
 
         await primaryHelper.execute();

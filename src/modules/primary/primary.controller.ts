@@ -22,10 +22,59 @@ import {
     PaymentSystem,
 } from 'src/common/enums/general';
 
-@UsePipes(PaymentSystemValidationPipe, HandlerDestinationValidationPipe)
-@Controller('/primary/:paymentSystem/:handlerDestination')
+// @UsePipes(PaymentSystemValidationPipe, HandlerDestinationValidationPipe)
+// @Controller('/primary/:paymentSystem/:handlerDestination')
+@Controller('/')
 export class PrimaryController {
     constructor(private readonly primaryService: PrimaryService) {}
+
+    /**
+     * Temporary solution for testing
+     * 
+     * Query params example:
+
+        QUERY, ======== Empty <[Object: null prototype] {}> {
+            merch_id: 'A471B6C085183B83C051',
+            trx_id: '13NBJDKKBUZF1RY1',
+            'o.CustomerKey': 'IgT92MNfiH9U6Xcy3qGckiz5MK0DjQ3L',
+            'o.PaymentStatus': 'new',
+            'o.TestEnv': 'true',
+            ts: '20240416 12:28:24'
+        }
+
+        URL example: https://api.softpaymoney.com/api/payment/gazprom/verify?merch_id=A471B6C085183B83C051&trx_id=13NBJDKKBUZF1RY1&o.CustomerKey=IgT92MNfiH9U6Xcy3qGckiz5MK0DjQ3L&o.PaymentStatus=new&o.TestEnv=true&ts=2024041612:28:24
+     */
+    @Get('/api/payment/gazprom/verify')
+    @HttpCode(HttpStatus.OK)
+    async verify(
+        @Query() query: Dictionary,
+        @Response() reply: FastifyReply,
+    ): Promise<void> {
+        console.log('QUERY, ========', query);
+
+        const paymentSystem = PaymentSystem.Gazprom;
+        const handlerDestination = HandlerDestination.Preparation;
+
+        const processingResult = await this.primaryService.processRequest(
+            query,
+            paymentSystem,
+            handlerDestination,
+        );
+        if (
+            processingResult.incomingRequestStatus ===
+            IncomingRequestStatus.Processed
+        ) {
+            const replyParams = this.primaryService.compileReplyParams(
+                processingResult.requestResultData,
+            );
+            reply.header('Content-Type', replyParams.contentType);
+            reply.send(replyParams.payload);
+        } else {
+            throw new InternalServerErrorException('Incoming request failed');
+        }
+        // reply.header('Content-Type', 'application/json');
+        // reply.send({ one: 1 });
+    }
 
     /**
      * Entry point for GET method
@@ -38,7 +87,6 @@ export class PrimaryController {
         @Param('handlerDestination') handlerDestination: HandlerDestination,
         @Response() reply: FastifyReply,
     ): Promise<void> {
-        // Remove this comment
         const processingResult = await this.primaryService.processRequest(
             query,
             paymentSystem,
