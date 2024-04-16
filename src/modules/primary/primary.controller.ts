@@ -38,6 +38,7 @@ export class PrimaryController {
         @Param('handlerDestination') handlerDestination: HandlerDestination,
         @Response() reply: FastifyReply,
     ): Promise<void> {
+        // Remove this comment
         const processingResult = await this.primaryService.processRequest(
             query,
             paymentSystem,
