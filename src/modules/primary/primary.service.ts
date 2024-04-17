@@ -21,6 +21,7 @@ export class PrimaryService {
         inputData: Dictionary,
         paymentSystem: PaymentSystem,
         handlerDestination: HandlerDestination,
+        metadata?: Dictionary,
     ): Promise<PrimaryProcessingRequestResult> {
         const requestPayload = JSON.stringify(inputData);
 
@@ -28,9 +29,14 @@ export class PrimaryService {
             requestPayload,
             paymentSystem,
             handlerDestination,
+            metadata,
         );
         if (await primaryHelper.isDoubleRequest(inputData)) {
-            await primaryHelper.claimDoubleRequest(inputData);
+            /**
+             * @todo uncomment the line bellow
+             * @important
+             */
+            // await primaryHelper.claimDoubleRequest(inputData);
         }
 
         await primaryHelper.execute();

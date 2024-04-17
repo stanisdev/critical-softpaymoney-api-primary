@@ -28,6 +28,7 @@ export class PrimaryHelper {
         private requestPayload: string,
         private paymentSystem: PaymentSystem,
         private handlerDestination: HandlerDestination,
+        private metadata: Dictionary,
     ) {}
 
     /**
@@ -135,11 +136,18 @@ export class PrimaryHelper {
      * Save incoming request in Postgres
      */
     private async saveIncomingRequestInPostgres(): Promise<void> {
+        let metadata: string;
+        if (this.metadata instanceof Object) {
+            metadata = `'${JSON.stringify(this.metadata)}'`;
+        } else {
+            metadata = 'null';
+        }
         const [result] = await typeOrmDataSource.query(`
             INSERT INTO "IncomingRequests"
-                ("payload", "status", "paymentSystem", "handlerDestination", "createdAt", "updatedAt")
+                ("payload", "metadata", "status", "paymentSystem", "handlerDestination", "createdAt", "updatedAt")
             VALUES (
                 '${this.requestPayload}',
+                ${metadata},
                 'RECEIVED',
                 'GAZPROM',
                 '${this.handlerDestination}',
