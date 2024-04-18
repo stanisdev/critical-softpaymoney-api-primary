@@ -32,11 +32,7 @@ export class PrimaryService {
             metadata,
         );
         if (await primaryHelper.isDoubleRequest(inputData)) {
-            /**
-             * @todo uncomment the line bellow
-             * @important
-             */
-            // await primaryHelper.claimDoubleRequest(inputData);
+            await primaryHelper.claimDoubleRequest(inputData);
         }
 
         await primaryHelper.execute();

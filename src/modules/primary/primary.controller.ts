@@ -116,9 +116,18 @@ export class PrimaryController {
             handlerDestination,
             { fullUrl },
         );
-
-        reply.header('Content-Type', 'application/json');
-        reply.send({ one: 1 });
+        if (
+            processingResult.incomingRequestStatus ===
+            IncomingRequestStatus.Processed
+        ) {
+            const replyParams = this.primaryService.compileReplyParams(
+                processingResult.requestResultData,
+            );
+            reply.header('Content-Type', replyParams.contentType);
+            reply.send(replyParams.payload);
+        } else {
+            throw new InternalServerErrorException('Incoming request failed');
+        }
     }
 
     /**
