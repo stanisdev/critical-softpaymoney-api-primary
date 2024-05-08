@@ -113,7 +113,7 @@ export class PrimaryHelper {
                 }
             } else {
                 /**
-                 * Request to a nadler server failed
+                 * Request to a hadler server failed
                  */
                 const logPayload = {
                     hadlerPort: port,
@@ -220,7 +220,10 @@ export class PrimaryHelper {
     async claimDoubleRequest(inputData: Dictionary): Promise<void> {
         await this.databaseLogger.write(
             DatabaseLogType.DuplicateIncomingRequest,
-            inputData,
+            {
+                paymentSystem: this.paymentSystem,
+                inputData,
+            },
         );
         throw new BadRequestException(
             'Order with such ID has been already sent',

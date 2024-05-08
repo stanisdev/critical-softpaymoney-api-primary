@@ -11,6 +11,7 @@ import { LogLevel, LoggerService, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './modules/app.module';
 import { typeOrmDataSource } from 'src/database/data-source';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { OpenSearchClient } from './common/providers/open-search-client';
 
 export class ServerBootstrap {
     private static instance: ServerBootstrap | null = null;
@@ -34,6 +35,9 @@ export class ServerBootstrap {
      */
     async start() {
         await this.connectPostgres();
+
+        OpenSearchClient.build();
+        await OpenSearchClient.connect();
 
         /**
          * Build application instance

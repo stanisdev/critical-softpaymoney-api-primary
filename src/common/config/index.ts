@@ -73,4 +73,10 @@ export default {
         restrictionPeriod: +env.RATE_LIMITER_RESTRICTION_PERIOD,
         maxRequests: +env.RATE_LIMITER_MAX_REQUESTS,
     },
+    openSearch: {
+        index: env.OPENSEARCH_INDEX,
+        username: env.OPENSEARCH_USERNAME,
+        password: env.OPENSEARCH_PASSWORD,
+        node: 'https://localhost:9200', // @todo: move to '.env' file
+    },
 };
