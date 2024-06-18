@@ -8,7 +8,6 @@ import {
     Post,
     Query,
     UsePipes,
-    InternalServerErrorException,
     Response,
 } from '@nestjs/common';
 import { FastifyReply } from 'fastify';
@@ -16,11 +15,8 @@ import { PaymentSystemValidationPipe } from 'src/common/pipes/payment-system-val
 import { HandlerDestinationValidationPipe } from 'src/common/pipes/handler-destination-validation.pipe';
 import { PrimaryService } from './primary.service';
 import { Dictionary } from 'src/common/types/general';
-import {
-    HandlerDestination,
-    IncomingRequestStatus,
-    PaymentSystem,
-} from 'src/common/enums/general';
+import { HandlerDestination, PaymentSystem } from 'src/common/enums/general';
+import { PrimaryProcessingResultHandler } from './primary.processing-result-handler';
 
 @UsePipes(PaymentSystemValidationPipe, HandlerDestinationValidationPipe)
 @Controller('/primary/:paymentSystem/:handlerDestination')
@@ -44,18 +40,10 @@ export class PrimaryController {
             paymentSystem,
             handlerDestination,
         );
-        if (
-            processingResult.incomingRequestStatus ===
-            IncomingRequestStatus.Processed
-        ) {
-            const replyParams = this.primaryService.compileReplyParams(
-                processingResult.requestResultData,
-            );
-            reply.header('Content-Type', replyParams.contentType);
-            reply.send(replyParams.payload);
-        } else {
-            throw new InternalServerErrorException('Incoming request failed');
-        }
+        const processingResultHandler = new PrimaryProcessingResultHandler();
+        processingResultHandler.setReply(reply);
+        processingResultHandler.setProcessingResult(processingResult);
+        processingResultHandler.handle();
     }
 
     /**
@@ -74,17 +62,9 @@ export class PrimaryController {
             paymentSystem,
             handlerDestination,
         );
-        if (
-            processingResult.incomingRequestStatus ===
-            IncomingRequestStatus.Processed
-        ) {
-            const replyParams = this.primaryService.compileReplyParams(
-                processingResult.requestResultData,
-            );
-            reply.header('Content-Type', replyParams.contentType);
-            reply.send(replyParams.payload);
-        } else {
-            throw new InternalServerErrorException('Incoming request failed');
-        }
+        const processingResultHandler = new PrimaryProcessingResultHandler();
+        processingResultHandler.setReply(reply);
+        processingResultHandler.setProcessingResult(processingResult);
+        processingResultHandler.handle();
     }
 }

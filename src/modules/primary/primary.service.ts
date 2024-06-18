@@ -1,7 +1,5 @@
-import * as xml from 'xml';
 import { Injectable } from '@nestjs/common';
 import {
-    ContentType,
     HandlerDestination,
     IncomingRequestStatus,
     PaymentSystem,
@@ -63,22 +61,5 @@ export class PrimaryService {
                 requestResultData: null,
             };
         }
-    }
-
-    /**
-     * Compile reply parameters (Content type & Payload)
-     */
-    compileReplyParams(requestResultData: Dictionary) {
-        let payload;
-
-        if (requestResultData.contentType === ContentType.Xml) {
-            payload = xml(<string>requestResultData.payload, true);
-        } else {
-            payload = requestResultData.payload;
-        }
-        return {
-            contentType: requestResultData.contentType,
-            payload,
-        };
     }
 }
